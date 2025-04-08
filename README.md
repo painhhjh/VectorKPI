@@ -24,7 +24,10 @@ si les da algún error, ejecuten
    npx expo-doctor   
    ```
    ```bash
-   npm audit fix   
+   npm audit fix
+   ```
+   ```bash
+   npm install axios expo-secure-store   
    ```
 
 ## Learn more
