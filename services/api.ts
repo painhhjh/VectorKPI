@@ -9,10 +9,10 @@ import ApiConstants from '../constants/Api';
 // Clave para guardar/recuperar el token de autenticación de forma segura
 const CLAVE_TOKEN_AUTH = 'authToken';
 
-// Instancia de Axios ---
+// Instancia de Axios
 const clienteApi: AxiosInstance = axios.create({
   baseURL: ApiConstants.BASE_URL, // URL base de la API desde las constantes
-  timeout: 10000,
+  timeout: 10000, // Tiempo máximo de espera para una petición (10 segundos)
   headers: {
     'Content-Type': 'application/json', // Tipo de contenido por defecto para las peticiones POST/PUT
     'Accept': 'application/json', // Aceptamos respuestas JSON
@@ -67,22 +67,36 @@ clienteApi.interceptors.response.use(
 
     if (error.response) {
       // El servidor respondió con un código de estado fuera del rango 2xx
-      const { status, data } = error.response;
+      const { status, data, config } = error.response;
+      const originalRequest = config; // La configuración de la petición original
 
       if (status === 401) {
         // Error de autenticación (Token inválido, expirado, etc.)
-        console.warn('[API Interceptor Res] Error 401 - No autorizado. Requiere acción.');
-        
-        
-        /*         --- Acción por hacer aquí ---
-        1. Intentar refrescar el token (si tienes un endpoint para ello).
-        2. Si no se puede refrescar o no hay refresh token, borrar el token local.
-           await SecureStore.deleteItemAsync(CLAVE_TOKEN_AUTH);
-        3. Redirigir al usuario a la pantalla de login.
-           (Esto usualmente se maneja en un nivel superior, como en el AuthContext
-            o usando el sistema de navegación para evitar acoplar el servicio API
-            con la navegación).
-        Por ahora, solo rechazamos la promesa para que el código que llamó lo maneje. */
+        console.warn('[API Interceptor Res] Error 401 - No autorizado.');
+
+        // --- Lógica para manejar el 401 ---
+        // 1. Intentar refrescar el token (si aplica y no es la petición de refresh la que falló)
+        //    (Esta lógica se añadiría aquí si tu API soporta refresh tokens)
+        //    const
+        //    if (originalRequest.url !== ApiConstants.AUTH_REFRESH_ENDPOINT) { ... }
+
+        // 2. Si no hay refresh token o falla, borrar el token local y señalar error.
+        try {
+          console.log('[API Interceptor Res] Borrando token local debido a error 401.');
+          await borrarToken(); // Llama a la función que usa SecureStore.deleteItemAsync
+          // Podrías emitir un evento global aquí si prefieres ese enfoque:
+          // eventEmitter.emit('logoutRequired');
+        } catch (deleteError) {
+          console.error('[API Interceptor Res] Error al borrar el token después de un 401:', deleteError);
+        }
+
+        // 3. Rechazar la promesa con un error específico para que AuthContext lo maneje.
+        //    Esto evita acoplar el servicio API con la lógica de navegación/estado global.
+        const authError = new Error('Sesión inválida o expirada. Por favor, inicia sesión de nuevo.');
+        // Puedes añadir propiedades adicionales al error si es útil
+        (authError as any).isAuthError = true;
+        (authError as any).status = 401;
+        return Promise.reject(authError);
 
       } else if (status === 403) {
         // Error de autorización (Usuario autenticado pero sin permisos para el recurso)
@@ -95,9 +109,11 @@ clienteApi.interceptors.response.use(
       }
       // Puedes añadir manejo para otros códigos de error (400, 404, etc.)
 
-      // Intentamos devolver un error más estructurado si es posible
-      const errorData = data || { message: error.message };
+      // Intentamos devolver un error más estructurado si es posible para otros casos
+      // Asegúrate de que 'data' sea un objeto o proporciona un mensaje predeterminado
+      const errorData = (typeof data === 'object' && data !== null) ? data : { message: error.message || 'Error desconocido' };
       return Promise.reject(errorData);
+
 
     } else if (error.request) {
       // La petición se hizo pero no se recibió respuesta (ej. problema de red, timeout)
@@ -120,7 +136,7 @@ clienteApi.interceptors.response.use(
  * @param url - La URL relativa al baseURL.
  * @param params - Parámetros de consulta opcionales.
  * @param data - El cuerpo de la petición.
-*/
+ */
 
 // Realiza una petición GET usando la instancia configurada de Axios.
 export const get = <T = any>(url: string, params?: object): Promise<AxiosResponse<T>> => {
@@ -152,7 +168,7 @@ export default clienteApi;
 /**
  * @param token - El token a guardar.
  * @returns Promise<void>
-*/
+ */
 
 //Guarda el token de autenticación de forma segura.
 export const guardarToken = async (token: string): Promise<void> => {
@@ -166,7 +182,7 @@ export const guardarToken = async (token: string): Promise<void> => {
   }
 };
 
-// Exportamos la función para borrar el token (la usaremos en el AuthContext/Logout) 
+// Exportamos la función para borrar el token (la usaremos en el AuthContext/Logout)
 // Elimina el token de autenticación del almacenamiento seguro.
 
 export const borrarToken = async (): Promise<void> => {
