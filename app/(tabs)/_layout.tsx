@@ -1,73 +1,76 @@
+/**
+ * @file Layout para el grupo de rutas principal con pestañas (tabs).
+ * @description Define la navegación por pestañas para usuarios autenticados.
+ */
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons'; // O usa expo-symbols u otra librería
-import Colors from '../../constants/Colors'; // Asegúrate que la ruta sea correcta
+import { Ionicons } from '@expo/vector-icons'; // O el set de iconos que prefieras
+import Colors from '../../constants/Colors'; // Ajusta la ruta
+import { Platform } from 'react-native';
 
-// Función auxiliar para generar iconos de la barra de pestañas
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+// Componente helper para el icono de la pestaña
+function IconoTabBar({ name, color }: { name: React.ComponentProps<typeof Ionicons>['name']; color: string }) {
+  return <Ionicons size={26} style={{ marginBottom: -3 }} name={name} color={color} />;
 }
 
 export default function TabLayout() {
-  // Define el color activo de las pestañas (puedes usar tu paleta de Colors.ts)
-  const activeTabColor = Colors.primary; 
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: activeTabColor,
-        // Puedes descomentar esto si las pantallas dentro de las pestañas manejan su propia cabecera
-        // headerShown: false,
+        tabBarActiveTintColor: Colors.primary, // Color para la pestaña activa
+        tabBarInactiveTintColor: Colors.gray, // Color para pestañas inactivas
         tabBarStyle: {
-          // Estilos adicionales para la barra de pestañas si son necesarios
-          // backgroundColor: Colors.light.background,
+          backgroundColor: Colors.white, // Fondo de la barra de pestañas
+          // Puedes añadir más estilos aquí (altura, sombra, etc.)
+          height: Platform.OS === 'ios' ? 85 : 65, // Ajusta altura si es necesario
+          paddingBottom: Platform.OS === 'ios' ? 30 : 5,
+          paddingTop: 5,
         },
+        tabBarLabelStyle: {
+          fontSize: 10, // Tamaño de la etiqueta
+          fontWeight: '500',
+        },
+        headerShown: true, // Muestra la cabecera por defecto en las pantallas de tabs
         headerStyle: {
-            // Estilos para la cabecera por defecto de las pestañas
-           // backgroundColor: Colors.light.primary, // Ejemplo
+          backgroundColor: Colors.primary, // Fondo de la cabecera
         },
-        headerTintColor: Colors.text, // Color del texto de la cabecera
+        headerTintColor: Colors.white, // Color del texto y botones de la cabecera
         headerTitleStyle: {
-            // Estilo del título de la cabecera
-            // fontWeight: 'bold',
+          fontWeight: 'bold',
         },
       }}>
       {/* Pestaña del Dashboard */}
       <Tabs.Screen
-        name="dashboard"
+        name="dashboard" // Corresponde al archivo app/(tabs)/dashboard.tsx
         options={{
-          title: 'Dashboard', // Título de la pestaña y la cabecera
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="tachometer" color={color} />,
-          // Puedes agregar un botón en la cabecera si es necesario
+          title: 'Dashboard', // Título en la cabecera y la pestaña
+          tabBarIcon: ({ color }: { color: string }) => <IconoTabBar name="stats-chart" color={color} />, // Icono
+          // Puedes añadir un botón en la cabecera si lo necesitas
           // headerRight: () => ( ... ),
         }}
       />
 
-      {/* Pestaña de Detalle de KPI */}
-      {/* Considera si esta pantalla debe ser una pestaña directa o si se navega a ella */}
-      {/* Si no es una pestaña directa, puedes quitarla de aquí y manejar la navegación */}
-      {/* desde 'dashboard' o definirla como una pantalla dentro del Stack de 'dashboard'. */}
-      {/* Ocultarla de la barra de pestañas con href: null si solo se accede por navegación */}
+      {/* Pestaña de Configuración */}
       <Tabs.Screen
-         name="kpi-detail"
+        name="settings" // Corresponde al archivo app/(tabs)/settings.tsx
+        options={{
+          title: 'Configuración',
+          tabBarIcon: ({ color }: { color: string }) => <IconoTabBar name="settings-sharp" color={color} />,
+        }}
+      />
+
+       {/* Pantalla de Detalle de KPI (oculta de las pestañas) */}
+       {/* La definimos aquí para que pertenezca al Stack de Tabs pero no sea una pestaña visible */}
+       <Tabs.Screen
+         name="kpi-detail" // Corresponde al archivo app/(tabs)/kpi-detail.tsx
          options={{
            title: 'Detalle KPI',
-           // href: null, // Descomenta si no quieres que aparezca en la barra de pestañas
-           tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="bar-chart" color={color} />,
+           href: null, // Oculta esta pantalla de la barra de pestañas
+           headerShown: true, // Puedes decidir si mostrar la cabecera aquí
+           // Podrías querer un botón de 'Atrás' personalizado o usar el por defecto
          }}
        />
 
-      {/* Pestaña de Configuración */}
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Configuración',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="cog" color={color} />,
-        }}
-      />
     </Tabs>
   );
 }
