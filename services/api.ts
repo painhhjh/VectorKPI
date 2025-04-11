@@ -1,13 +1,11 @@
-/*
-    Configuración centralizada del cliente HTTP (axios) para interactuar con la API.
-    Establece la URL base, interceptores para tokens y manejo de errores.
- */
+//Configuración centralizada del cliente HTTP (axios) para interactuar con la API.
+//Establece la URL base, interceptores para tokens y manejo de errores.
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import ApiConstants from '../constants/Api';
 
 // Clave para guardar/recuperar el token de autenticación de forma segura
-const CLAVE_TOKEN_AUTH = 'authToken';
+export const CLAVE_TOKEN_AUTH = 'authToken';
 
 // Instancia de Axios
 const clienteApi: AxiosInstance = axios.create({

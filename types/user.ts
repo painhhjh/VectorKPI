@@ -4,6 +4,6 @@ export interface Usuario {
     id: string | number; // Identificador único del usuario
     email: string; // Correo electrónico del usuario
     nombre?: string; // Nombre del usuario (opcional)
-    // Puedes añadir más campos según lo que devuelva tu API (roles, permisos, etc.)
+    // Puedes añadir más campos según lo que devuelva la API (roles, permisos, etc.)
     // roles?: string[];
   }

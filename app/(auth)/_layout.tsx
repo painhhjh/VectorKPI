@@ -1,10 +1,8 @@
-/**
- * @file Layout para el grupo de rutas de autenticación (auth).
- * @description Define un Stack Navigator para las pantallas de login, registro, etc.
- */
+//Layout para el grupo de rutas de autenticación. Define un Stack Navigator para las pantallas de login, registro, etc.
+
 import React from 'react';
 import { Stack } from 'expo-router';
-import Colors from '../../constants/Colors'; // Importa los colores para la cabecera
+import Colors from '../../constants/Colors';
 
 export default function AuthLayout() {
   return (

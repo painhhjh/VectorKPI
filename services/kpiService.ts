@@ -1,16 +1,11 @@
-/**
- * @file Servicio para interactuar con los endpoints de la API relacionados con los KPIs.
- * @description Define funciones para obtener, crear, actualizar y eliminar KPIs.
- */
+//Servicio para interactuar con los endpoints de la API relacionados con los KPIs.
+// Define funciones para obtener, crear, actualizar y eliminar KPIs.
+
 import clienteApi, { get, post, put, del } from './api'; // Importa la instancia y helpers
 import ApiConstants from '../constants/Api';
 import { KPI, KpiListResponse, KpiFilters } from '../types'; // Importa los tipos necesarios
 
-/**
- * Obtiene una lista de KPIs desde la API, opcionalmente con filtros.
- * @param filtros - Objeto opcional con los filtros a aplicar (ej. categoría, rango de fechas).
- * @returns Promise<KpiListResponse> - Una promesa que resuelve con la respuesta paginada de la API.
- */
+// Obtiene una lista de KPIs desde la API, opcionalmente con filtros.
 export const obtenerKpis = async (filtros?: KpiFilters): Promise<KpiListResponse> => {
   console.log('[KpiService] Obteniendo lista de KPIs con filtros:', filtros);
   try {
@@ -43,11 +38,8 @@ export const obtenerKpis = async (filtros?: KpiFilters): Promise<KpiListResponse
   }
 };
 
-/**
- * Obtiene los detalles de un KPI específico por su ID.
- * @param id - El ID único del KPI a obtener.
- * @returns Promise<KPI> - Una promesa que resuelve con los datos del KPI.
- */
+//Obtiene los detalles de un KPI específico por su ID.
+
 export const obtenerDetalleKpi = async (id: string): Promise<KPI> => {
   console.log(`[KpiService] Obteniendo detalle del KPI con ID: ${id}`);
   if (!id) {
@@ -77,12 +69,8 @@ export const obtenerDetalleKpi = async (id: string): Promise<KPI> => {
   }
 };
 
-/**
- * Crea un nuevo KPI en la API.
- * @param nuevoKpiData - Objeto con los datos del nuevo KPI (sin id, lastUpdated, trend).
- * Ajusta los campos requeridos según tu API.
- * @returns Promise<KPI> - Una promesa que resuelve con los datos del KPI recién creado.
- */
+//Crea un nuevo KPI en la API. Ajusta los campos requeridos según tu API.
+
 export const crearKpi = async (
     nuevoKpiData: Omit<KPI, 'id' | 'lastUpdated' | 'trend'>
 ): Promise<KPI> => {
@@ -106,12 +94,8 @@ export const crearKpi = async (
   }
 };
 
-/**
- * Actualiza un KPI existente en la API.
- * @param id - El ID del KPI a actualizar.
- * @param kpiData - Objeto con los campos del KPI a actualizar.
- * @returns Promise<KPI> - Una promesa que resuelve con los datos del KPI actualizado.
- */
+//Actualiza un KPI existente en la API.
+
 export const actualizarKpi = async (
     id: string,
     kpiData: Partial<Omit<KPI, 'id' | 'lastUpdated'>> // Permite actualizar campos parciales
@@ -143,11 +127,8 @@ export const actualizarKpi = async (
   }
 };
 
-/**
- * Elimina un KPI de la API por su ID.
- * @param id - El ID del KPI a eliminar.
- * @returns Promise<void> - Una promesa que resuelve cuando la eliminación es exitosa.
- */
+//Elimina un KPI de la API por su ID.
+
 export const eliminarKpi = async (id: string): Promise<void> => {
   console.log(`[KpiService] Eliminando KPI con ID: ${id}`);
   if (!id) {

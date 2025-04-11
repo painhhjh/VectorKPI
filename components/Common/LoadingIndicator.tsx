@@ -1,11 +1,9 @@
-/**
- * @file Componente reutilizable para mostrar un indicador de actividad (spinner).
- * @description Utiliza ActivityIndicator de react-native y colores definidos en las constantes.
- */
+//Componente reutilizable para mostrar un indicador de actividad (spinner).
+
 import React from 'react';
 import { ActivityIndicator, StyleSheet, View, ViewStyle } from 'react-native';
-import Colors from '../../constants/Colors'; // Ajusta la ruta si es necesario
-import Layout from '../../constants/Layout'; // Ajusta la ruta si es necesario
+import Colors from '../../constants/Colors';
+import Layout from '../../constants/Layout';
 
 // Propiedades que puede recibir el componente
 interface IndicadorCargaProps {

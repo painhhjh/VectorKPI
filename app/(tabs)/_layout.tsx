@@ -1,11 +1,8 @@
-/**
- * @file Layout para el grupo de rutas principal con pestañas (tabs).
- * @description Define la navegación por pestañas para usuarios autenticados.
- */
+// Layout para el grupo de rutas principal con pestañas. Define la navegación por pestañas para usuarios autenticados.
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons'; // O el set de iconos que prefieras
-import Colors from '../../constants/Colors'; // Ajusta la ruta
+import { Ionicons } from '@expo/vector-icons';
+import Colors from '../../constants/Colors';
 import { Platform } from 'react-native';
 
 // Componente helper para el icono de la pestaña
@@ -45,14 +42,14 @@ export default function TabLayout() {
         options={{
           title: 'Dashboard', // Título en la cabecera y la pestaña
           tabBarIcon: ({ color }: { color: string }) => <IconoTabBar name="stats-chart" color={color} />, // Icono
-          // Puedes añadir un botón en la cabecera si lo necesitas
+          // se puede añadir un botón en la cabecera si se necesita
           // headerRight: () => ( ... ),
         }}
       />
 
       {/* Pestaña de Configuración */}
       <Tabs.Screen
-        name="settings" // Corresponde al archivo app/(tabs)/settings.tsx
+        name="settings"
         options={{
           title: 'Configuración',
           tabBarIcon: ({ color }: { color: string }) => <IconoTabBar name="settings-sharp" color={color} />,
@@ -62,7 +59,7 @@ export default function TabLayout() {
        {/* Pantalla de Detalle de KPI (oculta de las pestañas) */}
        {/* La definimos aquí para que pertenezca al Stack de Tabs pero no sea una pestaña visible */}
        <Tabs.Screen
-         name="kpi-detail" // Corresponde al archivo app/(tabs)/kpi-detail.tsx
+         name="kpi-detail" 
          options={{
            title: 'Detalle KPI',
            href: null, // Oculta esta pantalla de la barra de pestañas

@@ -1,8 +1,6 @@
-/**
- * @file Define el Contexto de Autenticación y el Proveedor (AuthProvider).
- * @description Gestiona el estado de autenticación global (token, usuario, estado)
- * y proporciona funciones para iniciar y cerrar sesión.
- */
+//Define el Contexto de Autenticación y el Proveedor (AuthProvider). 
+// Gestiona el estado de autenticación global (token, usuario, estado) y proporciona funciones para iniciar y cerrar sesión.
+
 import React, {
     createContext,
     useState,

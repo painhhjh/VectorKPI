@@ -1,10 +1,8 @@
-/**
- * @file Layout raíz de la aplicación.
- * @description Configura el AuthProvider, gestiona la SplashScreen y define la navegación principal.
- */
+//Layout raíz de la aplicación. Configura el AuthProvider, gestiona la SplashScreen y define la navegación principal.
+
 import React, { useEffect } from 'react';
 import { Stack, SplashScreen, useRouter, useSegments } from 'expo-router';
-import { useFonts } from 'expo-font'; // Asumiendo que cargarás fuentes personalizadas
+import { useFonts } from 'expo-font';
 import { AuthProvider } from '../contexts/AuthContext';
 import { useAuth } from '../contexts/useAuth';
 import IndicadorCarga from '../components/Common/LoadingIndicator';

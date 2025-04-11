@@ -5,13 +5,13 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { useFocusEffect } from 'expo-router'; // Para recargar al enfocar la pestaña
-import KpiList from '../../components/KPI/KpiList'; // Ajusta la ruta
-import IndicadorCarga from '../../components/Common/LoadingIndicator'; // Ajusta la ruta
-import MensajeError from '../../components/Common/ErrorMessage'; // Ajusta la ruta
-import { obtenerKpis } from '../../services/kpiService'; // Ajusta la ruta
-import { KpiListResponse, KPI } from '../../types'; // Ajusta la ruta
-import Layout from '../../constants/Layout'; // Ajusta la ruta
-import Color from '../../constants/Colors'; // Ajusta la ruta
+import KpiList from '../../components/KPI/KpiList';
+import IndicadorCarga from '../../components/Common/LoadingIndicator';
+import MensajeError from '../../components/Common/ErrorMessage';
+import { obtenerKpis } from '../../services/kpiService';
+import { KpiListResponse, KPI } from '../../types';
+import Layout from '../../constants/Layout';
+import Color from '../../constants/Colors';
 
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
 

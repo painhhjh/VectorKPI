@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { TextInput, StyleSheet, View, Text, TextInputProps, ViewStyle, TextStyle } from 'react-native';
-import Colors from '../../constants/Colors'; // Ajusta la ruta si es necesario
-import Layout from '../../constants/Layout'; // Ajusta la ruta si es necesario
+import Colors from '../../constants/Colors';
+import Layout from '../../constants/Layout';
 
 // Propiedades extendidas de TextInputProps para personalización
 interface CampoEntradaProps extends TextInputProps {

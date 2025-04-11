@@ -1,10 +1,9 @@
-/**
- * @file Servicio para interactuar con los endpoints de la API relacionados con la autenticación.
- * @description Define funciones para registrar usuarios y solicitar recuperación de contraseña.
- */
-import { post } from './api'; // Importa el helper 'post' configurado
+// Servicio para interactuar con los endpoints de la API relacionados con la autenticación.
+// Define funciones para registrar usuarios y solicitar recuperación de contraseña.
+
+import { post } from './api';
 import ApiConstants from '../constants/Api';
-import { Usuario } from '../types'; // Importa el tipo Usuario si la API lo devuelve al registrar
+import { Usuario } from '../types';
 
 // Define la estructura esperada para los datos de registro
 // Ajusta esto según los campos que requiera tu API
@@ -23,11 +22,8 @@ interface RespuestaRegistro {
    mensaje?: string;
 }
 
-/**
- * Registra un nuevo usuario en la API.
- * @param datosRegistro - Objeto con los datos del nuevo usuario (email, password, nombre).
- * @returns Promise<RespuestaRegistro> - Una promesa que resuelve con la respuesta de la API.
- */
+//Registra un nuevo usuario en la API.
+
 export const registrarUsuario = async (
     datosRegistro: DatosRegistro
 ): Promise<RespuestaRegistro> => {
@@ -51,18 +47,14 @@ export const registrarUsuario = async (
   }
 };
 
-/**
- * Solicita la recuperación de contraseña para un email dado.
- * @param email - El correo electrónico del usuario que olvidó su contraseña.
- * @returns Promise<void> - Una promesa que resuelve si la solicitud fue exitosa (generalmente no devuelve datos).
- */
+//Solicita la recuperación de contraseña para un email dado.
+
 export const solicitarRecuperacionPassword = async (
     email: string
 ): Promise<void> => {
   console.log('[AuthService] Solicitando recuperación de contraseña para:', email);
   try {
     // Realiza la petición POST al endpoint de recuperación
-    // Usualmente solo se envía el email en el cuerpo
     await post<void>( // Esperamos una respuesta vacía (ej. 200 OK o 204 No Content)
         ApiConstants.AUTH_FORGOT_PASSWORD_ENDPOINT,
         { email } // Cuerpo de la petición
@@ -78,12 +70,7 @@ export const solicitarRecuperacionPassword = async (
   }
 };
 
-/**
- * Restablece la contraseña de un usuario utilizando un token de recuperación.
- * @param token - El token proporcionado para la recuperación de contraseña.
- * @param nuevaPassword - La nueva contraseña que desea establecer el usuario.
- * @returns Promise<void> - Una promesa que resuelve si la solicitud fue exitosa.
- */
+//Restablece la contraseña de un usuario utilizando un token de recuperación.
 export const restablecerPassword = async (
   token: string,
   nuevaPassword: string

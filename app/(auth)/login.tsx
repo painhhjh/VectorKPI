@@ -5,12 +5,12 @@
 import React from 'react';
 import { View, StyleSheet, Text, Image, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router'; // Para navegar a otras pantallas
-import FormularioLogin from '../../components/Auth/LoginForm'; // Ajusta la ruta
-import Colors from '../../constants/Colors'; // Ajusta la ruta
-import Layout from '../../constants/Layout'; // Ajusta la ruta
+import FormularioLogin from '../../components/Auth/LoginForm';
+import Colors from '../../constants/Colors';
+import Layout from '../../constants/Layout';
 
 // Asegúrate de tener un logo en esta ruta o cambia la fuente
-const logoPath = require('../../assets/images/react-logo.png'); // Ajusta la ruta
+const logoPath = require('../../assets/images/react-logo.png'); //hay que hacer un logo y ponerlo acá
 
 export default function PantallaLogin() {
   return (

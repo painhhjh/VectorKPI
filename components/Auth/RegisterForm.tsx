@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router'; // Para posible redirección post-registro
-import CampoEntrada from '../Common/InputField'; // Ajusta la ruta
-import Boton from '../Common/Button'; // Ajusta la ruta
-import MensajeError from '../Common/ErrorMessage'; // Ajusta la ruta
-import Layout from '../../constants/Layout'; // Ajusta la ruta
-import { registrarUsuario } from '../../services/authService'; // Importa la función del servicio
+import { useRouter } from 'expo-router';
+import CampoEntrada from '../Common/InputField';
+import Boton from '../Common/Button';
+import MensajeError from '../Common/ErrorMessage';
+import Layout from '../../constants/Layout';
+import { registrarUsuario } from '../../services/authService';
 
 const FormularioRegistro: React.FC = () => {
   const router = useRouter();

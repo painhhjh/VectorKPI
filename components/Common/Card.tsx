@@ -1,7 +1,4 @@
-/*
-  Componente reutilizable de tarjeta para agrupar contenido.
-  Proporciona un contenedor estilizado con sombra y bordes redondeados.
- */
+//Componente reutilizable de tarjeta para agrupar contenido.
   import React from 'react';
   import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
   import Colors from '../../constants/Colors';

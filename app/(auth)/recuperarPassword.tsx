@@ -11,14 +11,16 @@ export default function PantallaRecuperarPassword() {
     <SafeAreaView style={estilos.safeArea}>
       <ScrollView contentContainerStyle={estilos.scrollViewContainer}>
         <View style={estilos.contenedor}>
+          {/* Título de la pantalla */}
           <Text style={estilos.titulo}>Recuperar Contraseña</Text>
+          
+          {/* Subtítulo con instrucciones */}
           <Text style={estilos.subtitulo}>
             Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.
           </Text>
 
           {/* Formulario de Recuperación */}
           <FormularioRecuperarPassword />
-
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -27,42 +29,42 @@ export default function PantallaRecuperarPassword() {
 
 const estilos = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background,
+    flex: 1, // Ocupa todo el espacio disponible
+    backgroundColor: Colors.background, // Fondo general de la pantalla
   },
   scrollViewContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: Layout.spacing.large,
-    paddingHorizontal: Layout.spacing.medium,
+    flexGrow: 1, // Permite que el contenido crezca si es necesario
+    justifyContent: 'center', // Centra el contenido verticalmente
+    alignItems: 'center', // Centra el contenido horizontalmente
+    paddingVertical: Layout.spacing.large, // Espaciado vertical
+    paddingHorizontal: Layout.spacing.medium, // Espaciado horizontal
   },
   contenedor: {
-    width: '100%',
-    maxWidth: 450,
-    alignItems: 'center',
-    backgroundColor: Colors.cardBackground,
-    borderRadius: Layout.borderRadius.large,
-    padding: Layout.spacing.medium,
-     paddingBottom: Layout.spacing.large, // Más padding abajo
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 4,
+    width: '100%', // Ocupa todo el ancho disponible
+    maxWidth: 450, // Ancho máximo del contenedor
+    alignItems: 'center', // Centra los elementos dentro del contenedor
+    backgroundColor: Colors.cardBackground, // Fondo del contenedor
+    borderRadius: Layout.borderRadius.large, // Bordes redondeados
+    padding: Layout.spacing.medium, // Espaciado interno
+    paddingBottom: Layout.spacing.large, // Más padding en la parte inferior
+    shadowColor: Colors.black, // Color de la sombra
+    shadowOffset: { width: 0, height: 2 }, // Dirección de la sombra
+    shadowOpacity: 0.1, // Opacidad de la sombra
+    shadowRadius: 5, // Difuminado de la sombra
+    elevation: 4, // Elevación para sombras en Android
   },
   titulo: {
-    fontSize: Layout.fontSize.title,
-    fontWeight: 'bold',
-    color: Colors.primary,
-    marginBottom: Layout.spacing.small,
-    marginTop: Layout.spacing.medium,
+    fontSize: Layout.fontSize.title, // Tamaño de fuente para el título
+    fontWeight: 'bold', // Texto en negrita
+    color: Colors.primary, // Color del texto
+    marginBottom: Layout.spacing.small, // Espaciado debajo del título
+    marginTop: Layout.spacing.medium, // Espaciado encima del título
   },
   subtitulo: {
-    fontSize: Layout.fontSize.body,
-    color: Colors.textSecondary,
-    marginBottom: Layout.spacing.large, // Más espacio antes del form
-    textAlign: 'center',
-    paddingHorizontal: Layout.spacing.small, // Padding para que no pegue a los bordes
+    fontSize: Layout.fontSize.body, // Tamaño de fuente para el subtítulo
+    color: Colors.textSecondary, // Color del texto secundario
+    marginBottom: Layout.spacing.large, // Espaciado debajo del subtítulo
+    textAlign: 'center', // Centra el texto
+    paddingHorizontal: Layout.spacing.small, // Espaciado horizontal interno
   },
 });

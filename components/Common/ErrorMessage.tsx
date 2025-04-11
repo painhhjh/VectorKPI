@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { Text, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
-import Colors from '../../constants/Colors'; // Ajusta la ruta si es necesario
-import Layout from '../../constants/Layout'; // Ajusta la ruta si es necesario
+import Colors from '../../constants/Colors';
+import Layout from '../../constants/Layout';
 
 // Propiedades que puede recibir el componente
 interface MensajeErrorProps {

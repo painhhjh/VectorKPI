@@ -3,7 +3,7 @@
  * @description Proporciona una forma limpia de consumir los datos y funciones de AuthContext.
  */
 import { useContext } from 'react';
-import { AuthContext } from '../contexts/AuthContext'; // Ajusta la ruta si es necesario
+import { AuthContext } from '../contexts/AuthContext';
 
 // Hook personalizado useAuth
 export const useAuth = () => {

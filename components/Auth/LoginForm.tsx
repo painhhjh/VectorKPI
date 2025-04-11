@@ -1,12 +1,12 @@
 // Componente de formulario para el inicio de sesión.
 
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native'; // Importa Alert
-import { useAuth } from '../../hooks/useAuth'; // Ajusta la ruta
-import CampoEntrada from '../Common/InputField'; // Ajusta la ruta
-import Boton from '../Common/Button'; // Ajusta la ruta
-import MensajeError from '../Common/ErrorMessage'; // Ajusta la ruta
-import Layout from '../../constants/Layout'; // Ajusta la ruta
+import { View, StyleSheet, Alert } from 'react-native';
+import { useAuth } from '../../hooks/useAuth';
+import CampoEntrada from '../Common/InputField';
+import Boton from '../Common/Button';
+import MensajeError from '../Common/ErrorMessage';
+import Layout from '../../constants/Layout';
 
 const FormularioLogin: React.FC = () => {
   const { iniciarSesion, estado } = useAuth(); // Obtiene la función de login y el estado

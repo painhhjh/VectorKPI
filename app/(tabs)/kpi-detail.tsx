@@ -5,13 +5,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router'; // Hooks de Expo Router
-import { obtenerDetalleKpi } from '../../services/kpiService'; // Ajusta la ruta
-import KpiChart from '../../components/KPI/KpiChart'; // Ajusta la ruta
-import IndicadorCarga from '../../components/Common/LoadingIndicator'; // Ajusta la ruta
-import MensajeError from '../../components/Common/ErrorMessage'; // Ajusta la ruta
-import { KPI } from '../../types'; // Ajusta la ruta
-import Colors from '../../constants/Colors'; // Ajusta la ruta
-import Layout from '../../constants/Layout'; // Ajusta la ruta
+import { obtenerDetalleKpi } from '../../services/kpiService';
+import KpiChart from '../../components/KPI/KpiChart';
+import IndicadorCarga from '../../components/Common/LoadingIndicator';
+import MensajeError from '../../components/Common/ErrorMessage';
+import { KPI } from '../../types';
+import Colors from '../../constants/Colors';
+import Layout from '../../constants/Layout';
 
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
 

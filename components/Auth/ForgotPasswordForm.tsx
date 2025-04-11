@@ -63,46 +63,46 @@ const FormularioRecuperarPassword: React.FC = () => {
 
       {/* Campo de Email */}
       <CampoEntrada
-        etiqueta="Correo Electrónico Registrado"
-        placeholder="tu@correo.com"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        textContentType="emailAddress"
-        editable={!cargando && !mensajeExito} // No editable si carga o si ya hubo éxito
-      />
+          etiqueta="Correo Electrónico Registrado"
+          placeholder="tu@correo.com"
+          value={email} 
+          onChangeText={setEmail}
+          keyboardType="email-address" // Tipo de teclado para email
+          autoCapitalize="none" 
+          autoComplete="email" // Sugerencias automáticas para email
+          textContentType="emailAddress" // Tipo de contenido para email
+          editable={!cargando && !mensajeExito} // No editable si está cargando o ya hubo éxito
+        />
 
-      {/* Botón de Enviar Solicitud */}
-      <Boton
-        titulo="Enviar Instrucciones"
-        onPress={manejarSubmit}
-        deshabilitado={cargando || !!mensajeExito} // Deshabilitado si carga o si ya hubo éxito
-        cargando={cargando}
-        estiloContenedor={estilos.boton}
-      />
-    </View>
-  );
-};
+        {/* Botón de Enviar Solicitud */}
+        <Boton
+          titulo="Enviar Instrucciones" // Texto del botón
+          onPress={manejarSubmit} // Acción al presionar el botón
+          deshabilitado={cargando || !!mensajeExito} // Deshabilitado si está cargando o ya hubo éxito
+          cargando={cargando} // Muestra indicador de carga si está cargando
+          estiloContenedor={estilos.boton} // Estilo del botón
+        />
+          </View>
+        );
+      };
 
-const estilos = StyleSheet.create({
-  contenedor: {
-    width: '100%',
-    padding: Layout.spacing.medium,
-  },
-  boton: {
-    marginTop: Layout.spacing.large,
-  },
-  textoExito: {
-    color: Colors.success,
-    fontSize: Layout.fontSize.body,
-    textAlign: 'center',
-    marginBottom: Layout.spacing.medium,
-    padding: Layout.spacing.small,
-    backgroundColor: Colors.success + '20', // Fondo verde claro
-    borderRadius: Layout.borderRadius.small,
-  },
-});
+      const estilos = StyleSheet.create({
+        contenedor: {
+          width: '100%', // Ancho completo
+          padding: Layout.spacing.medium, // Espaciado interno
+        },
+        boton: {
+          marginTop: Layout.spacing.large, // Margen superior
+        },
+        textoExito: {
+          color: Colors.success, // Color de texto para éxito
+          fontSize: Layout.fontSize.body, // Tamaño de fuente
+          textAlign: 'center', // Alineación centrada
+          marginBottom: Layout.spacing.medium, // Margen inferior
+          padding: Layout.spacing.small, // Espaciado interno
+          backgroundColor: Colors.success + '20', // Fondo verde claro
+          borderRadius: Layout.borderRadius.small, // Bordes redondeados
+        },
+      });
 
 export default FormularioRecuperarPassword;

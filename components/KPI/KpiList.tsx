@@ -4,12 +4,12 @@
  */
 import React from 'react';
 import { FlatList, View, Text, StyleSheet, RefreshControl } from 'react-native';
-import KpiCard from './KpiCard'; // Ajusta la ruta
-import IndicadorCarga from '../Common/LoadingIndicator'; // Ajusta la ruta
-import MensajeError from '../Common/ErrorMessage'; // Ajusta la ruta
-import { KPI } from '../../types'; // Ajusta la ruta
-import Layout from '../../constants/Layout'; // Ajusta la ruta
-import Colors from '../../constants/Colors'; // Ajusta la ruta
+import KpiCard from './KpiCard';
+import IndicadorCarga from '../Common/LoadingIndicator';
+import MensajeError from '../Common/ErrorMessage';
+import { KPI } from '../../types';
+import Layout from '../../constants/Layout';
+import Colors from '../../constants/Colors';
 
 // Propiedades que recibe el componente
 interface KpiListProps {
@@ -93,19 +93,19 @@ const KpiList: React.FC<KpiListProps> = ({
 
 const estilos = StyleSheet.create({
   listaContenedor: {
-    paddingHorizontal: Layout.spacing.medium, // Padding horizontal para la lista
-    paddingVertical: Layout.spacing.medium, // Padding vertical
-    flexGrow: 1, // Asegura que el contenedor vacío ocupe espacio
+    paddingHorizontal: Layout.spacing.medium, // Espaciado horizontal para los elementos de la lista
+    paddingVertical: Layout.spacing.medium, // Espaciado vertical para los elementos de la lista
+    flexGrow: 1, // Permite que el contenedor crezca para ocupar espacio disponible
   },
   contenedorVacio: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: Layout.spacing.xlarge * 2, // Más margen superior
+    flex: 1, // Ocupa todo el espacio disponible
+    justifyContent: 'center', // Centra el contenido verticalmente
+    alignItems: 'center', // Centra el contenido horizontalmente
+    marginTop: Layout.spacing.xlarge * 2, // Margen superior grande para separar del contenido
   },
   textoVacio: {
-    fontSize: Layout.fontSize.subheading,
-    color: Colors.textSecondary,
+    fontSize: Layout.fontSize.subheading, // Tamaño de fuente para el texto vacío
+    color: Colors.textSecondary, // Color del texto vacío
   },
 });
 

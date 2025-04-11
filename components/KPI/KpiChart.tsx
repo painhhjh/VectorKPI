@@ -1,10 +1,8 @@
-/**
- * @file Componente para visualizar datos históricos de un KPI en un gráfico de línea.
- * @description Utiliza react-native-chart-kit para renderizar el gráfico de forma segura.
- */
+//Componente para visualizar datos históricos de un KPI en un gráfico de línea.
+
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { LineChart } from 'react-native-chart-kit'; // Librería actualizada
+import { LineChart } from 'react-native-chart-kit';
 import Colors from '../../constants/Colors';
 import Layout from '../../constants/Layout';
 
@@ -33,12 +31,13 @@ const KpiChart: React.FC<KpiChartProps> = ({ datos, nombreKpi, unidad }) => {
   const pasoEtiqueta = Math.max(1, Math.ceil(datos.length / numeroMaximoEtiquetas));
 
   datos.forEach((punto, index) => {
+    // Agrega una etiqueta cada 'pasoEtiqueta' elementos o en el último elemento
     if (index % pasoEtiqueta === 0 || index === datos.length - 1) {
-      etiquetasGrafico.push(`${punto.fecha.getDate()}/${punto.fecha.getMonth() + 1}`);
+      etiquetasGrafico.push(`${punto.fecha.getDate()}/${punto.fecha.getMonth() + 1}`); // Formatea la fecha como día/mes
     } else {
-      etiquetasGrafico.push('');
+      etiquetasGrafico.push(''); // Deja la etiqueta vacía para mantener el espacio
     }
-    valoresGrafico.push(punto.valor);
+    valoresGrafico.push(punto.valor); // Agrega el valor del KPI al array de valores
   });
 
   // Configuración visual del gráfico (adaptada a react-native-chart-kit)
@@ -92,45 +91,50 @@ const KpiChart: React.FC<KpiChartProps> = ({ datos, nombreKpi, unidad }) => {
 
 // Estilos idénticos a la versión original
 const estilos = StyleSheet.create({
+  // Contenedor principal del gráfico
   contenedorPrincipal: {
-    marginVertical: Layout.spacing.medium,
-    paddingBottom: Layout.spacing.small,
-    backgroundColor: Colors.cardBackground,
-    borderRadius: Layout.borderRadius.medium,
-    alignItems: 'center',
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    marginVertical: Layout.spacing.medium, // Margen vertical
+    paddingBottom: Layout.spacing.small,  // Espaciado inferior
+    backgroundColor: Colors.cardBackground, // Fondo del contenedor
+    borderRadius: Layout.borderRadius.medium, // Bordes redondeados
+    alignItems: 'center', // Alineación centrada
+    shadowColor: Colors.black, // Color de la sombra
+    shadowOffset: { width: 0, height: 1 }, // Desplazamiento de la sombra
+    shadowOpacity: 0.1, // Opacidad de la sombra
+    shadowRadius: 3, // Radio de la sombra
+    elevation: 2, // Elevación para Android
   },
+  // Estilo del título del gráfico
   tituloGrafico: {
-    fontSize: Layout.fontSize.subheading,
-    fontWeight: '600',
-    color: Colors.text,
-    marginTop: Layout.spacing.medium,
-    marginBottom: Layout.spacing.small,
+    fontSize: Layout.fontSize.subheading, // Tamaño de fuente
+    fontWeight: '600', // Grosor de la fuente
+    color: Colors.text, // Color del texto
+    marginTop: Layout.spacing.medium, // Margen superior
+    marginBottom: Layout.spacing.small, // Margen inferior
   },
+  // Estilo del gráfico
   grafico: {
-    marginVertical: Layout.spacing.small,
-    borderRadius: Layout.borderRadius.medium,
+    marginVertical: Layout.spacing.small, // Margen vertical
+    borderRadius: Layout.borderRadius.medium, // Bordes redondeados
   },
+  // Contenedor para el mensaje de datos insuficientes
   contenedorPlaceholder: {
-    minHeight: 150,
-    padding: Layout.spacing.medium,
-    marginVertical: Layout.spacing.medium,
-    borderWidth: 1,
-    borderColor: Colors.lightGray,
-    borderStyle: 'dashed',
-    borderRadius: Layout.borderRadius.medium,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.lightGray + '30',
+    minHeight: 150, // Altura mínima
+    padding: Layout.spacing.medium, // Espaciado interno
+    marginVertical: Layout.spacing.medium, // Margen vertical
+    borderWidth: 1, // Ancho del borde
+    borderColor: Colors.lightGray, // Color del borde
+    borderStyle: 'dashed', // Estilo del borde
+    borderRadius: Layout.borderRadius.medium, // Bordes redondeados
+    justifyContent: 'center', // Alineación vertical centrada
+    alignItems: 'center', // Alineación horizontal centrada
+    backgroundColor: Colors.lightGray + '30', // Fondo con opacidad
   },
+  // Estilo del texto del mensaje de datos insuficientes
   textoPlaceholder: {
-    textAlign: 'center',
-    color: Colors.gray,
-    fontSize: Layout.fontSize.body,
+    textAlign: 'center', // Alineación centrada del texto
+    color: Colors.gray, // Color del texto
+    fontSize: Layout.fontSize.body, // Tamaño de fuente
   },
 });
 

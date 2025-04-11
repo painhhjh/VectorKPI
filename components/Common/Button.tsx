@@ -4,8 +4,8 @@
  */
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
-import Colors from '../../constants/Colors'; // Ajusta la ruta si es necesario
-import Layout from '../../constants/Layout'; // Ajusta la ruta si es necesario
+import Colors from '../../constants/Colors';
+import Layout from '../../constants/Layout';
 
 // Define los tipos de variantes visuales para el botón
 type VarianteBoton = 'primario' | 'secundario' | 'peligro' | 'texto';
