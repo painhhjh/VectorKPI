@@ -10,7 +10,7 @@ import Colors from '../../constants/Colors'; // Ajusta la ruta
 import Layout from '../../constants/Layout'; // Ajusta la ruta
 
 // Asegúrate de tener un logo en esta ruta o cambia la fuente
-const logoPath = require('../../assets/images/logo.png'); // Ajusta la ruta
+const logoPath = require('../../assets/images/react-logo.png'); // Ajusta la ruta
 
 export default function PantallaLogin() {
   return (
