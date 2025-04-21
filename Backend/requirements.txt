@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+passlib[bcrypt]
+python-jose[cryptography]
+python-dotenv
+pydantic[email] # Para validación de email en schemas
+alembic
+starlette
