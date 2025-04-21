@@ -7,7 +7,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-sys.path.append(os.getcwd())  # Asegura que Python encuentre tus módulos
+# Añadimos la carpeta 'backend' al path para importar módulos de la app
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from app.core.config import settings  # Importa la configuración
 from app.db.base import Base         # Importa la base de modelos
