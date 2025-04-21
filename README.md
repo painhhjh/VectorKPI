@@ -8,9 +8,11 @@
    ```bash
    npm install
    ```
-
    ```bash
    npx create-expo-app@latest 
+   ```
+   ```bash
+   pip install -r requirements.txt
    ```
 
 2. Start the app
