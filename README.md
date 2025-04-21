@@ -8,12 +8,16 @@
    ```bash
    npm install
    ```
+
    ```bash
    npx create-expo-app@latest 
    ```
+
    ```bash
    pip install -r requirements.txt
    ```
+   este es para el backend, por favor, recuerden añadir la información del .env. Por cuestiones de seguridad no se puede subir a Git, manejemoslo así
+
 
 2. Start the app
 
