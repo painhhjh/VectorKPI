@@ -32,10 +32,10 @@ def create_new_kpi(
 @router.get("/", response_model=KpiListResponse)
 def read_kpis_endpoint(
     db: DbSession,
+    current_user: ActiveUser,  # Proteger endpoint 
     filters: Annotated[KpiFilters, Depends()], # Inyecta filtros desde query params
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
-    current_user: ActiveUser, # Proteger endpoint
 ):
     """
     Obtiene una lista de KPIs, con filtros y paginación.

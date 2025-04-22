@@ -28,7 +28,7 @@ def create_category_endpoint(
     *,
     db: DbSession,
     category_in: CategoryCreate,
-    current_user: ActiveUser, # Proteger endpoint
+    # current_user: ActiveUser, # Proteger endpoint
 ):
     """Crea una nueva categoría."""
     existing_category = crud_category.get_category_by_name(db, name=category_in.name)
@@ -39,9 +39,9 @@ def create_category_endpoint(
 @category_router.get("/", response_model=List[CategoryRead])
 def read_categories_endpoint(
     db: DbSession,
+    current_user: ActiveUser, # Proteger endpoint
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
-    current_user: ActiveUser, # Proteger endpoint
 ):
     """Obtiene una lista de categorías."""
     return crud_category.get_categories(db, skip=skip, limit=limit)
@@ -115,10 +115,10 @@ def create_product_endpoint(
 @product_router.get("/", response_model=List[ProductRead])
 def read_products_endpoint(
     db: DbSession,
+    current_user: ActiveUser, # Proteger endpoint
     category_id: Optional[int] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
-    current_user: ActiveUser, # Proteger endpoint
 ):
     """Obtiene una lista de productos, opcionalmente filtrados por categoría."""
     return crud_product.get_products(db, skip=skip, limit=limit, category_id=category_id)
@@ -201,10 +201,10 @@ def create_transaction_endpoint(
 @transaction_router.get("/", response_model=List[TransactionRead])
 def read_transactions_endpoint(
     db: DbSession,
+    current_user: ActiveUser, # Proteger endpoint
     product_id: Optional[int] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
-    current_user: ActiveUser, # Proteger endpoint
 ):
     """Obtiene una lista de transacciones, opcionalmente filtradas por producto."""
     return crud_transaction.get_transactions(
