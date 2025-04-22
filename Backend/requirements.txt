@@ -8,3 +8,4 @@ python-dotenv
 pydantic[email] # Para validación de email en schemas
 alembic
 starlette
+python-multipart
