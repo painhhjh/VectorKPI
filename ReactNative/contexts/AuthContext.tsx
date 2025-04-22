@@ -1,8 +1,4 @@
-/**
- * @file Define el Contexto de Autenticación y el Proveedor (AuthProvider).
- * @description Gestiona el estado de autenticación global (token, usuario, estado)
- * y proporciona funciones para iniciar y cerrar sesión.
- */
+//Define el Contexto de Autenticación y el Proveedor (AuthProvider). Gestiona el estado de autenticación global (token, usuario, estado) y proporciona funciones para iniciar y cerrar sesión.
 import React, {
   createContext,
   useState,
@@ -90,16 +86,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setEstado('noAutenticado');
       }
     } catch (err: any) {
-      console.error('[AuthContext] Error verificando token o obteniendo usuario:', err);
+      console.error('[AuthContext] Error verificando token:', err);
       setError(err.message || 'Error al verificar la sesión.');
-      setEstado('error'); // Podría ser 'noAutenticado' también
+      setEstado('error');
       setToken(null);
       setUsuario(null);
-      // Asegurarse de borrar token inválido si la verificación falló
-      await borrarToken();
-      clienteApi.defaults.headers.common['Authorization'] = ''; // Limpia header en instancia axios
-    }
-  }, [obtenerDatosUsuario]); // Depende de obtenerDatosUsuario
+      
+      // Agrega un try/catch alrededor de borrarToken()
+      try {
+        await borrarToken();
+      } catch (deleteError) {
+        console.error('[AuthContext] Error al limpiar token corrupto:', deleteError);
+      } finally {
+        clienteApi.defaults.headers.common['Authorization'] = '';
+      }
+      } // Depende de obtenerDatosUsuario
+    }, []); // Cierra verificarAutenticacion
 
   // Ejecuta la verificación inicial cuando el componente se monta
   useEffect(() => {

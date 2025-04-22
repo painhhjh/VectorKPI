@@ -1,7 +1,5 @@
-/**
- * @file Hook personalizado para acceder fácilmente al Contexto de Autenticación.
- * @description Proporciona una forma limpia de consumir los datos y funciones de AuthContext.
- */
+// Hook personalizado para acceder fácilmente al Contexto de Autenticación. Proporciona una forma limpia de consumir los datos y funciones de AuthContext.
+
 import { useContext } from 'react';
 import { AuthContext } from './AuthContext';
 

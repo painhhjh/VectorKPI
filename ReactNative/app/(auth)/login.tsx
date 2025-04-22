@@ -1,7 +1,4 @@
-/**
- * @file Pantalla de Inicio de Sesión.
- * @description Presenta el formulario de login y enlaces adicionales.
- */
+//Pantalla de Inicio de Sesión.Presenta el formulario de login y enlaces adicionales.
 import React from 'react';
 import { View, StyleSheet, Text, Image, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router'; // Para navegar a otras pantallas
