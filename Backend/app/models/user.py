@@ -16,14 +16,14 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relación uno-a-uno con Profile
-    # cascade="all, delete-orphan" asegura que si se borra un User, su Profile también
+    cascade="all, delete-orphan" #asegura que si se borra un User, su Profile también
     profile = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
-    # Relación uno-a-muchos con Transactions (despues)
-    # transactions = relationship("Transaction", back_populates="user")
+    # Relación uno-a-muchos con Transactions
+    transactions = relationship("Transaction", back_populates="user")
 
-    # Relación uno-a-muchos con AI Logs (despues)
-    # ai_logs = relationship("AiLog", back_populates="user")
+    # Relación uno-a-muchos con AI Logs
+    ai_logs = relationship("AiLog", back_populates="user")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}')>"

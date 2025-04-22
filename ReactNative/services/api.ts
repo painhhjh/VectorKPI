@@ -4,6 +4,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosE
 import * as SecureStore from 'expo-secure-store';
 import ApiConstants from '../constants/Api';
 
+
 // Clave para guardar/recuperar el token de autenticación de forma segura
 export const CLAVE_TOKEN_AUTH = 'authToken';
 
@@ -17,7 +18,7 @@ const clienteApi: AxiosInstance = axios.create({
   },
 });
 
-//Interceptores 
+//Interceptores
 
 // 1. Interceptor de Peticiones (Request Interceptor)
 // Se ejecuta ANTES de que cada petición sea enviada. Útil para añadir headers comunes, como el token de autenticación.
@@ -64,67 +65,91 @@ clienteApi.interceptors.response.use(
     console.error('[API Interceptor Res] Error en respuesta:', error.response?.status, error.config?.url, error.message); // Log detallado
 
     if (error.response) {
-      // El servidor respondió con un código de estado fuera del rango 2xx
-      const { status, data, config } = error.response;
-      const originalRequest = config; // La configuración de la petición original
+        // El servidor respondió con un código de estado fuera del rango 2xx
+        const { status, data } = error.response;
+        let errorMessage = 'Ocurrió un error inesperado.'; // Mensaje por defecto
 
-      if (status === 401) {
-        // Error de autenticación (Token inválido, expirado, etc.)
-        console.warn('[API Interceptor Res] Error 401 - No autorizado.');
-
-        // --- Lógica para manejar el 401 ---
-        // 1. Intentar refrescar el token (si aplica y no es la petición de refresh la que falló)
-        //    (Esta lógica se añadiría aquí si tu API soporta refresh tokens)
-        //    const
-        //    if (originalRequest.url !== ApiConstants.AUTH_REFRESH_ENDPOINT) { ... }
-
-        // 2. Si no hay refresh token o falla, borrar el token local y señalar error.
-        try {
-          console.log('[API Interceptor Res] Borrando token local debido a error 401.');
-          await borrarToken(); // Llama a la función que usa SecureStore.deleteItemAsync
-          // Podrías emitir un evento global aquí si prefieres ese enfoque:
-          // eventEmitter.emit('logoutRequired');
-        } catch (deleteError) {
-          console.error('[API Interceptor Res] Error al borrar el token después de un 401:', deleteError);
+        // Intentar obtener detalle de FastAPI u otros formatos comunes
+        if (typeof data === 'object' && data !== null) {
+            if ((data as any).detail) { // FastAPI detail
+                errorMessage = (data as any).detail;
+            } else if ((data as any).message) { // Common 'message' property
+                errorMessage = (data as any).message;
+            } else if (typeof (data as any).error === 'string') { // Common 'error' string property
+                 errorMessage = (data as any).error;
+            }
+            // Puedes añadir más checks aquí para otros formatos de error comunes en tu API
+        } else if (typeof data === 'string' && data.length > 0) {
+            // Si la respuesta es solo un string, usarlo como mensaje
+            errorMessage = data;
+        } else if (error.message) {
+            // Fallback al mensaje de error de Axios si no hay cuerpo o detalle
+            errorMessage = error.message;
         }
 
-        // 3. Rechazar la promesa con un error específico para que AuthContext lo maneje.
-        //    Esto evita acoplar el servicio API con la lógica de navegación/estado global.
-        const authError = new Error('Sesión inválida o expirada. Por favor, inicia sesión de nuevo.');
-        // Puedes añadir propiedades adicionales al error si es útil
-        (authError as any).isAuthError = true;
-        (authError as any).status = 401;
-        return Promise.reject(authError);
 
-      } else if (status === 403) {
-        // Error de autorización (Usuario autenticado pero sin permisos para el recurso)
-        console.warn('[API Interceptor Res] Error 403 - Prohibido.');
-        // Podrías mostrar un mensaje al usuario indicando falta de permisos.
-      } else if (status >= 500) {
-        // Error del servidor
-        console.error('[API Interceptor Res] Error del servidor:', status);
-        // Podrías mostrar un mensaje genérico de error del servidor.
-      }
-      // Puedes añadir manejo para otros códigos de error (400, 404, etc.)
+        if (status === 401) {
+            // Error de autenticación (Token inválido, expirado, etc.)
+            console.warn('[API Interceptor Res] Error 401 - No autorizado.');
 
-      // Intentamos devolver un error más estructurado si es posible para otros casos
-      // Asegúrate de que 'data' sea un objeto o proporciona un mensaje predeterminado
-      const errorData = (typeof data === 'object' && data !== null) ? data : { message: error.message || 'Error desconocido' };
-      return Promise.reject(errorData);
+            // --- Lógica para manejar el 401 ---
+            // 1. Intentar refrescar el token (si aplica) - Lógica no implementada aquí
+            // 2. Borrar el token local
+            try {
+                console.log('[API Interceptor Res] Borrando token local debido a error 401.');
+                await borrarToken(); // Llama a la función que usa SecureStore.deleteItemAsync
+            } catch (deleteError) {
+                console.error('[API Interceptor Res] Error al borrar el token después de un 401:', deleteError);
+            }
+
+            // 3. Rechazar la promesa con un error específico para que AuthContext lo maneje.
+            const authError = new Error('Sesión inválida o expirada. Por favor, inicia sesión de nuevo.');
+            (authError as any).isAuthError = true; // Flag para identificarlo fácilmente
+            (authError as any).status = 401;
+            return Promise.reject(authError);
+
+        } else if (status === 403) {
+            errorMessage = 'No tienes permiso para realizar esta acción.';
+            console.warn('[API Interceptor Res] Error 403 - Prohibido.');
+        } else if (status === 404) {
+            errorMessage = 'El recurso solicitado no fue encontrado.';
+            console.warn('[API Interceptor Res] Error 404 - No encontrado.');
+        } else if (status >= 500) {
+            errorMessage = 'Ocurrió un error en el servidor. Inténtalo más tarde.';
+            console.error('[API Interceptor Res] Error del servidor:', status);
+        }
+        // Puedes añadir manejo para otros códigos de error (400, 409, 422, etc.) si es necesario
+
+        // Rechazar con un objeto Error que contiene el mensaje procesado y detalles adicionales
+        const processedError = new Error(errorMessage);
+        (processedError as any).status = status; // Adjuntar status si es útil
+        (processedError as any).data = data; // Adjuntar data original si es útil
+        return Promise.reject(processedError);
 
 
     } else if (error.request) {
       // La petición se hizo pero no se recibió respuesta (ej. problema de red, timeout)
-      console.error('[API Interceptor Res] No se recibió respuesta del servidor:', error.request);
+      console.error('[API Interceptor Res] No se recibió respuesta del servidor:', error.code, error.message); // Log con código de error (e.g., ECONNABORTED)
+      let networkErrorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+      if (error.code === 'ECONNABORTED') {
+          networkErrorMessage = 'La petición tardó demasiado en responder. Inténtalo de nuevo.';
+      }
       // Podrías devolver un error indicando problema de conexión.
-      return Promise.reject(new Error('No se pudo conectar con el servidor. Verifica tu conexión a internet.'));
+      const networkError = new Error(networkErrorMessage);
+      (networkError as any).isNetworkError = true; // Flag para identificarlo
+      (networkError as any).code = error.code; // Adjuntar código de error si existe
+      return Promise.reject(networkError);
+
     } else {
       // Ocurrió un error al configurar la petición que disparó un Error
       console.error('[API Interceptor Res] Error al configurar la petición:', error.message);
+      // Devolver un error genérico para este caso raro
+      return Promise.reject(new Error('Error al preparar la solicitud: ' + error.message));
     }
 
-    // Rechaza la promesa con el error original si no fue manejado específicamente
-    return Promise.reject(error);
+    // Este punto no debería alcanzarse si toda la lógica anterior funciona,
+    // pero como fallback, rechazamos con el error original.
+    // return Promise.reject(error); // Comentado porque los casos anteriores cubren todo
   }
 );
 

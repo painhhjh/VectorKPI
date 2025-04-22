@@ -3,23 +3,26 @@
  * @description Muestra información del usuario y permite cerrar sesión.
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useAuth } from '../../hooks/useAuth';
-import Boton from '../../components/Common/Button';
-import Colors from '../../constants/Colors';
-import Layout from '../../constants/Layout';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native'; // Importa Alert
+import { useAuth } from '../../hooks/useAuth'; // Ajusta la ruta
+import Boton from '../../components/Common/Button'; // Ajusta la ruta
+import Colors from '../../constants/Colors'; // Ajusta la ruta
+import Layout from '../../constants/Layout'; // Ajusta la ruta
 
 export default function PantallaConfiguracion() {
-  const { usuario, cerrarSesion, estado } = useAuth(); // Obtiene datos y función de logout
+  // Obtiene datos y función de logout del contexto actualizado
+  const { usuario, cerrarSesion, estado } = useAuth();
 
   const handleLogout = async () => {
     try {
       await cerrarSesion();
-      // La navegación a la pantalla de login es manejada por app/_layout.tsx
+      // La navegación a la pantalla de login es manejada por app/_layout.tsx al detectar
+      // el cambio de estado a 'noAutenticado'.
       console.log('[SettingsScreen] Cierre de sesión iniciado.');
-    } catch (error) {
+    } catch (error: any) {
       console.error('[SettingsScreen] Error al cerrar sesión:', error);
-      // Podrías mostrar un Alert aquí si el cierre de sesión falla
+      // Muestra un mensaje de error al usuario si falla el proceso
+      Alert.alert('Error', `No se pudo cerrar la sesión completamente: ${error.message}`);
     }
   };
 
@@ -29,13 +32,17 @@ export default function PantallaConfiguracion() {
         <Text style={estilos.tituloSeccion}>Información del Usuario</Text>
         {usuario ? (
           <>
-            <Text style={estilos.textoInfo}>Nombre: {usuario.nombre || 'No disponible'}</Text>
+            {/* Muestra nombre si existe, si no, muestra 'No disponible' */}
+            <Text style={estilos.textoInfo}>
+                Nombre: {usuario.nombre || 'No disponible'}
+            </Text>
             <Text style={estilos.textoInfo}>Email: {usuario.email}</Text>
             <Text style={estilos.textoInfo}>ID: {usuario.id}</Text>
             {/* Añade más información del usuario si está disponible */}
           </>
         ) : (
-          <Text style={estilos.textoInfo}>No se pudo cargar la información del usuario.</Text>
+          // Muestra un mensaje si el usuario es null (podría pasar brevemente durante logout)
+          <Text style={estilos.textoInfo}>Cargando información...</Text>
         )}
       </View>
 
@@ -44,6 +51,8 @@ export default function PantallaConfiguracion() {
           titulo="Cerrar Sesión"
           onPress={handleLogout}
           variante="peligro" // Botón rojo para logout
+          // Deshabilita el botón mientras el estado de AuthContext sea 'cargando'
+          deshabilitado={estado === 'cargando'}
           cargando={estado === 'cargando'} // Muestra spinner si está en proceso
           estiloContenedor={estilos.botonLogout}
         />
@@ -62,47 +71,37 @@ export default function PantallaConfiguracion() {
 
 const estilos = StyleSheet.create({
   contenedor: {
-    flex: 1, // Hace que el contenedor ocupe todo el espacio disponible
-    backgroundColor: Colors.background, // Color de fondo del contenedor
-    padding: Layout.spacing.medium, // Espaciado interno del contenedor
+    flex: 1,
+    backgroundColor: Colors.background,
+    padding: Layout.spacing.medium,
   },
   seccion: {
-    backgroundColor: Colors.cardBackground, // Color de fondo para cada sección
-    borderRadius: Layout.borderRadius.medium, // Bordes redondeados para las secciones
-    padding: Layout.spacing.large, // Espaciado interno de las secciones
-    marginBottom: Layout.spacing.large, // Espaciado entre secciones
-    shadowColor: Colors.black, // Color de la sombra
-    shadowOffset: { width: 0, height: 1 }, // Desplazamiento de la sombra
-    shadowOpacity: 0.1, // Opacidad de la sombra
-    shadowRadius: 3, // Difuminado de la sombra
-    elevation: 2, // Elevación para sombras en Android
+    backgroundColor: Colors.cardBackground,
+    borderRadius: Layout.borderRadius.medium,
+    padding: Layout.spacing.large,
+    marginBottom: Layout.spacing.large,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   tituloSeccion: {
-    fontSize: Layout.fontSize.heading, // Tamaño de fuente para el título
-    fontWeight: '600', // Grosor de la fuente
-    color: Colors.primary, // Color del texto del título
-    marginBottom: Layout.spacing.medium, // Espaciado inferior del título
-    borderBottomWidth: 1, // Línea inferior para separar el título
-    borderBottomColor: Colors.border, // Color de la línea inferior
-    paddingBottom: Layout.spacing.small, // Espaciado interno inferior del título
+    fontSize: Layout.fontSize.heading,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: Layout.spacing.medium,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    paddingBottom: Layout.spacing.small,
   },
   textoInfo: {
-    fontSize: Layout.fontSize.body, // Tamaño de fuente para el texto informativo
-    color: Colors.text, // Color del texto
-    marginBottom: Layout.spacing.small, // Espaciado inferior entre líneas de texto
-    lineHeight: Layout.fontSize.body * 1.5, // Altura de línea para mejorar legibilidad
+    fontSize: Layout.fontSize.body,
+    color: Colors.text,
+    marginBottom: Layout.spacing.small,
+    lineHeight: Layout.fontSize.body * 1.5,
   },
   botonLogout: {
-    backgroundColor: Colors.danger, // Fondo rojo para indicar acción peligrosa
-    borderRadius: Layout.borderRadius.small, // Bordes redondeados del botón
-    paddingVertical: Layout.spacing.small, // Espaciado vertical interno
-    paddingHorizontal: Layout.spacing.large, // Espaciado horizontal interno
-    alignItems: 'center', // Centrar texto dentro del botón
-    justifyContent: 'center', // Centrar contenido verticalmente
-    shadowColor: Colors.black, // Sombra para el botón
-    shadowOffset: { width: 0, height: 2 }, // Desplazamiento de la sombra
-    shadowOpacity: 0.2, // Opacidad de la sombra
-    shadowRadius: 4, // Difuminado de la sombra
-    elevation: 3, // Elevación para sombras en Android
+    // Estilos adicionales para el botón si son necesarios
   },
 });
