@@ -1,0 +1,68 @@
+├── backend/                                # FastAPI + PostgreSQL backend
+│   ├── alembic/                            # Directorio de Alembic para migraciones de DB
+│   │   ├── versions/                       # Archivos de migración generados
+│   │   ├── env.py                          # Script de configuración de entorno de Alembic
+│   │   └── script.py.mako                  # Plantilla para nuevos scripts de migración
+│   ├── app/                                # Directorio principal de la aplicación FastAPI
+│   │   ├── __init__.py
+│   │   ├── main.py                         # Creación de la instancia FastAPI, middleware (CORS)
+│   │   ├── api/                            # Routers y endpoints de la API
+│   │   │   ├── __init__.py
+│   │   │   ├── dependencies.py
+│   │   │   └── v1/                         # Versión 1 de la API
+│   │   │       ├── __init__.py
+│   │   │       ├── api.py                  # Router principal que incluye otros routers
+│   │   │       └── endpoints/              # Endpoints de la API organizados por dominio
+│   │   │           ├── __init__.py         # Inicializador del paquete endpoints
+│   │   │           ├── auth.py             # Endpoints de autenticación (login, registro, refresh)
+│   │   │           └── users.py            # Endpoints CRUD para usuarios/perfiles
+│   │   │           ├── inventory.py        # Endpoints para inventario (productos, categorías, transacciones)
+│   │   │           ├── kpi.py              # Endpoints para KPIs 
+│   │   │           └── ai.py               # Endpoints para funcionalidades de IA
+│   │   ├── core/                           # Configuración central y utilidades generales
+│   │   │   ├── __init__.py                 # Inicializador del paquete core
+│   │   │   └── config.py                   # Carga y gestión de variables de entorno (Pydantic BaseSettings)
+│   │   ├── crud/                           # Operaciones CRUD (Create, Read, Update, Delete)
+│   │   │   ├── __init__.py                 # Inicializador del paquete crud
+│   │   │   ├── base.py                     # Clase base para operaciones CRUD genéricas
+│   │   │   ├── user.py                     # Funciones CRUD específicas para el modelo User
+│   │   │   ├── product.py                  # CRUD para productos
+│   │   │   ├── category.py                 # CRUD para categorías
+│   │   │   ├── transaction.py              # CRUD para transacciones
+│   │   │   ├── ai_log.py                   # CRUD para logs de IA
+│   │   │   └── kpi.py                      # CRUD para KPIs
+│   │   ├── db/                             # Lógica y configuración de la base de datos
+│   │   │   ├── __init__.py                 # Inicializador del paquete db
+│   │   │   ├── base.py                     # Base declarativa de SQLAlchemy y metadatos
+│   │   │   └── session.py                  # Motor de DB, SessionLocal, dependencia get_db
+│   │   ├── models/                         # Modelos ORM de SQLAlchemy
+│   │   │   ├── __init__.py                 # Inicializador del paquete models
+│   │   │   ├── user.py                     # Modelo User (usuario)
+│   │   │   ├── profile.py                  # Modelo Profile (perfil de usuario)
+│   │   │   ├── product.py                  # Modelo Product (producto)
+│   │   │   ├── category.py                 # Modelo Category (categoría)
+│   │   │   ├── transaction.py              # Modelo Transaction (transacción)
+│   │   │   ├── ai_log.py                   # Modelo para logs de IA
+│   │   │   └── kpi.py                      # Modelo KPI 
+│   │   ├── schemas/                        # Esquemas Pydantic para validación y serialización
+│   │   │   ├── __init__.py                 # Inicializador del paquete schemas
+│   │   │   ├── user.py                     # Esquemas de usuario (User, UserCreate, UserUpdate)
+│   │   │   ├── profile.py                  # Esquemas de perfil de usuario
+│   │   │   ├── token.py                    # Esquemas para tokens JWT (Token, TokenData)
+│   │   │   ├── product.py                  # Esquemas para productos
+│   │   │   ├── category.py                 # Esquemas para categorías
+│   │   │   ├── transaction.py              # Esquemas para transacciones
+│   │   │   ├── ai.py                       # Esquemas para IA
+│   │   │   └── kpi.py                      # Esquemas para KPIs 
+│   │   ├── security/                       # Lógica de seguridad y utilidades criptográficas
+│   │   │   ├── __init__.py                 # Inicializador del paquete security
+│   │   │   └── core.py                     # Hashing de contraseñas, creación/verificación de JWT
+│   │   └── services/                       # Lógica para interactuar con servicios externos o internos
+│   │       ├── __init__.py                 # Inicializador del paquete services   
+│   │       └── external_ai_service.py      # Servicio para consumir API de OpenAI o Gemini
+│   ├── tests/                              # Pruebas unitarias y de integración
+│   │   └── ...
+│   ├── .env                                # Variables de entorno (NO SUBIR A GIT)
+│   ├── .gitignore
+│   ├── alembic.ini                         # Configuración de Alembic
+│   └── requirements.txt                    # Dependencias de Python

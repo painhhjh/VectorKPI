@@ -1,0 +1,54 @@
+├── React Native/                           # React Native (Expo) app
+│   ├── app/                                # Rutas principales de la aplicación (Expo Router)
+│   │   ├── (auth)/                         # Grupo de rutas para flujo de autenticación
+│   │   │   ├── _layout.tsx                 # Layout base para pantallas de autenticación (sin tabs)
+│   │   │   ├── login.tsx                   # Pantalla de inicio de sesión
+│   │   │   └── recuperarPassword.tsx       # Pantalla de recuperación
+│   │   │   ├── registro.tsx                # Pantalla de registro de usuario
+│   │   ├── (tabs)/                         # Grupo de rutas principales con navegación por pestañas
+│   │   │   ├── _layout.tsx                 # Layout con barra de pestañas inferiores (TabBar)
+│   │   │   ├── dashboard.tsx               # Pantalla principal con lista de KPIs (usa KpiList)
+│   │   │   ├── inventory.tsx               # Pantalla de inventaria
+│   │   │   ├── kpi-detail.tsx              # Pantalla de detalle de un KPI (recibe ID por parámetro)
+│   │   │   ├── product-detail.tsx          # Pantalla de detalle de productos
+│   │   │   └── settings.tsx                # Pantalla de configuración (logout, perfil de usuario)
+│   │   ├── _layout.tsx                     # Layout raíz de la app (carga fuentes, provee AuthContext)
+│   │   └── index.tsx                       # Punto de entrada (redirige a auth/tabs según autenticación)
+│   ├── assets/                             # Recursos estáticos globales
+│   │   ├── fonts/                          # Fuentes personalizadas (ej: archivos .ttf o .otf)
+│   │   └── images/                         # Imágenes globales (logos, íconos, placeholders)
+│   ├── components/                         # Componentes reutilizables organizados por dominio
+│   │   ├── Auth/                           # Componentes específicos para autenticación
+│   │   │   ├── LoginForm.tsx               # Formulario reutilizable de login (usa InputField y Button)
+│   │   │   ├── RegisterForm.tsx            # Formulario reutilizable de registro de usuario
+│   │   │   └── ForgotPasswordForm.tsx      # Formulario reutilizable de recuperación de contraseña
+│   │   ├── Common/                         # Componentes genéricos usados en toda la app
+│   │   │   ├── Button.tsx                  # Botón estilizado con variantes (primary, secondary)
+│   │   │   ├── Card.tsx                    # Contenedor de tarjeta con sombras y bordes redondeados
+│   │   │   ├── ErrorMessage.tsx            # Mensaje de error estilizado (rojo con ícono)
+│   │   │   ├── InputField.tsx              # Campo de entrada con validación y manejo de errores
+│   │   │   └── LoadingIndicator.tsx        # Spinner o mensaje de carga animado
+│   │   └── KPIs/                           # Componentes específicos para el dominio de KPIs
+│   │       ├── KpiCard.tsx                 # Tarjeta que muestra resumen de un KPI (valor, tendencia)
+│   │       ├── KpiChart.tsx                # Gráfico interactivo (usando Victory Native o similar)
+│   │       └── KpiList.tsx                 # Lista paginada de KPIs (maneja carga y errores)
+│   ├── constants/                          # Configuraciones y valores constantes
+│   │   ├── Colors.ts                       # Paleta de colores (primarios, secundarios, neutros)
+│   │   ├── Layout.ts                       # Dimensiones comunes (paddings, márgenes, radios)
+│   │   └── Api.ts                          # URLs de API (BASE_URL, endpoints para auth/KPIs)
+│   ├── contexts/                           # Contextos de estado global (React Context API)
+│   │   ├── AuthContext.tsx                 # Maneja estado de autenticación (usuario, token, login/logout)
+│   │   └── useAuth.ts                      # Hook para acceder fácilmente al AuthContext
+│   ├── services/                           # Servicios para comunicación con APIs externas
+│   │   ├── api.ts                          # Configuración base de HTTP client (Axios/Fetch con interceptores)
+│   │   ├── authService.ts  				#Servicio para interactuar con los endpoints de la API relacionados con la autenticación.
+│   │   ├── inventoryService.ts  			#Servicio para interactuar con los endpoints de la API relacionados al inventario.
+│   │   └── kpiService.ts                   # Funciones para obtener KPIs (getAllKPIs, getKpiById)
+│   ├── types/                              # Definiciones de tipos TypeScript
+│   │   ├── index.ts                        # Punto de entrada para exportar todos los tipos
+│   │   ├── inventory.ts                    # Tipos relacionados a al inventario
+│   │   ├── kpi.ts                          # Tipos relacionados a KPIs (KPI, KpiTrend, KpiFilter)
+│   │   └── user.ts                         # Define la interfaz para el objeto de usuario.
+│   ├── app.json                            # Configuración de Expo (nombre, slug, assets, plugins)
+│   ├── package.json                        # Dependencias y scripts del proyecto (npm/yarn)
+│   └── tsconfig.json                       # Configuración de TypeScript (paths, strict mode, etc.)

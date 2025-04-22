@@ -1,0 +1,127 @@
+VectorKPI/
+├── React Native/                           # React Native (Expo) app
+│   ├── app/                                # Rutas principales de la aplicación (Expo Router)
+│   │   ├── (auth)/                         # Grupo de rutas para flujo de autenticación
+│   │   │   ├── _layout.tsx                 # Layout base para pantallas de autenticación (sin tabs)
+│   │   │   ├── login.tsx                   # Pantalla de inicio de sesión
+│   │   │   └── recuperarPassword.tsx       # Pantalla de recuperación
+│   │   │   ├── registro.tsx                # Pantalla de registro de usuario
+│   │   ├── (tabs)/                         # Grupo de rutas principales con navegación por pestañas
+│   │   │   ├── _layout.tsx                 # Layout con barra de pestañas inferiores (TabBar)
+│   │   │   ├── dashboard.tsx               # Pantalla principal con lista de KPIs (usa KpiList)
+│   │   │   ├── inventory.tsx               # Pantalla de inventaria
+│   │   │   ├── kpi-detail.tsx              # Pantalla de detalle de un KPI (recibe ID por parámetro)
+│   │   │   ├── product-detail.tsx          # Pantalla de detalle de productos
+│   │   │   └── settings.tsx                # Pantalla de configuración (logout, perfil de usuario)
+│   │   ├── _layout.tsx                     # Layout raíz de la app (carga fuentes, provee AuthContext)
+│   │   └── index.tsx                       # Punto de entrada (redirige a auth/tabs según autenticación)
+│   ├── assets/                             # Recursos estáticos globales
+│   │   ├── fonts/                          # Fuentes personalizadas (ej: archivos .ttf o .otf)
+│   │   └── images/                         # Imágenes globales (logos, íconos, placeholders)
+│   ├── components/                         # Componentes reutilizables organizados por dominio
+│   │   ├── Auth/                           # Componentes específicos para autenticación
+│   │   │   ├── LoginForm.tsx               # Formulario reutilizable de login (usa InputField y Button)
+│   │   │   ├── RegisterForm.tsx            # Formulario reutilizable de registro de usuario
+│   │   │   └── ForgotPasswordForm.tsx      # Formulario reutilizable de recuperación de contraseña
+│   │   ├── Common/                         # Componentes genéricos usados en toda la app
+│   │   │   ├── Button.tsx                  # Botón estilizado con variantes (primary, secondary)
+│   │   │   ├── Card.tsx                    # Contenedor de tarjeta con sombras y bordes redondeados
+│   │   │   ├── ErrorMessage.tsx            # Mensaje de error estilizado (rojo con ícono)
+│   │   │   ├── InputField.tsx              # Campo de entrada con validación y manejo de errores
+│   │   │   └── LoadingIndicator.tsx        # Spinner o mensaje de carga animado
+│   │   └── KPIs/                           # Componentes específicos para el dominio de KPIs
+│   │       ├── KpiCard.tsx                 # Tarjeta que muestra resumen de un KPI (valor, tendencia)
+│   │       ├── KpiChart.tsx                # Gráfico interactivo (usando Victory Native o similar)
+│   │       └── KpiList.tsx                 # Lista paginada de KPIs (maneja carga y errores)
+│   ├── constants/                          # Configuraciones y valores constantes
+│   │   ├── Colors.ts                       # Paleta de colores (primarios, secundarios, neutros)
+│   │   ├── Layout.ts                       # Dimensiones comunes (paddings, márgenes, radios)
+│   │   └── Api.ts                          # URLs de API (BASE_URL, endpoints para auth/KPIs)
+│   ├── contexts/                           # Contextos de estado global (React Context API)
+│   │   ├── AuthContext.tsx                 # Maneja estado de autenticación (usuario, token, login/logout)
+│   │   └── useAuth.ts                      # Hook para acceder fácilmente al AuthContext
+│   ├── services/                           # Servicios para comunicación con APIs externas
+│   │   ├── api.ts                          # Configuración base de HTTP client (Axios/Fetch con interceptores)
+│   │   ├── authService.ts  				#Servicio para interactuar con los endpoints de la API relacionados con la autenticación.
+│   │   ├── inventoryService.ts  			#Servicio para interactuar con los endpoints de la API relacionados al inventario.
+│   │   └── kpiService.ts                   # Funciones para obtener KPIs (getAllKPIs, getKpiById)
+│   ├── types/                              # Definiciones de tipos TypeScript
+│   │   ├── index.ts                        # Punto de entrada para exportar todos los tipos
+│   │   ├── inventory.ts                    # Tipos relacionados a al inventario
+│   │   ├── kpi.ts                          # Tipos relacionados a KPIs (KPI, KpiTrend, KpiFilter)
+│   │   └── user.ts                         # Define la interfaz para el objeto de usuario.
+│   ├── app.json                            # Configuración de Expo (nombre, slug, assets, plugins)
+│   ├── package.json                        # Dependencias y scripts del proyecto (npm/yarn)
+│   └── tsconfig.json                       # Configuración de TypeScript (paths, strict mode, etc.)
+│
+├── backend/                                # FastAPI + PostgreSQL backend
+│   ├── alembic/                            # Directorio de Alembic para migraciones de DB
+│   │   ├── versions/                       # Archivos de migración generados
+│   │   ├── env.py                          # Script de configuración de entorno de Alembic
+│   │   └── script.py.mako                  # Plantilla para nuevos scripts de migración
+│   ├── app/                                # Directorio principal de la aplicación FastAPI
+│   │   ├── __init__.py
+│   │   ├── main.py                         # Creación de la instancia FastAPI, middleware (CORS)
+│   │   ├── api/                            # Routers y endpoints de la API
+│   │   │   ├── __init__.py
+│   │   │   ├── dependencies.py
+│   │   │   └── v1/                         # Versión 1 de la API
+│   │   │       ├── __init__.py
+│   │   │       ├── api.py                  # Router principal que incluye otros routers
+│   │   │       └── endpoints/              # Endpoints de la API organizados por dominio
+│   │   │           ├── __init__.py         # Inicializador del paquete endpoints
+│   │   │           ├── auth.py             # Endpoints de autenticación (login, registro, refresh)
+│   │   │           └── users.py            # Endpoints CRUD para usuarios/perfiles
+│   │   │           ├── inventory.py        # Endpoints para inventario (productos, categorías, transacciones)
+│   │   │           ├── kpi.py              # Endpoints para KPIs 
+│   │   │           └── ai.py               # Endpoints para funcionalidades de IA
+│   │   ├── core/                           # Configuración central y utilidades generales
+│   │   │   ├── __init__.py                 # Inicializador del paquete core
+│   │   │   └── config.py                   # Carga y gestión de variables de entorno (Pydantic BaseSettings)
+│   │   ├── crud/                           # Operaciones CRUD (Create, Read, Update, Delete)
+│   │   │   ├── __init__.py                 # Inicializador del paquete crud
+│   │   │   ├── base.py                     # Clase base para operaciones CRUD genéricas
+│   │   │   ├── user.py                     # Funciones CRUD específicas para el modelo User
+│   │   │   ├── product.py                  # CRUD para productos
+│   │   │   ├── category.py                 # CRUD para categorías
+│   │   │   ├── transaction.py              # CRUD para transacciones
+│   │   │   ├── ai_log.py                   # CRUD para logs de IA
+│   │   │   └── kpi.py                      # CRUD para KPIs
+│   │   ├── db/                             # Lógica y configuración de la base de datos
+│   │   │   ├── __init__.py                 # Inicializador del paquete db
+│   │   │   ├── base.py                     # Base declarativa de SQLAlchemy y metadatos
+│   │   │   └── session.py                  # Motor de DB, SessionLocal, dependencia get_db
+│   │   ├── models/                         # Modelos ORM de SQLAlchemy
+│   │   │   ├── __init__.py                 # Inicializador del paquete models
+│   │   │   ├── user.py                     # Modelo User (usuario)
+│   │   │   ├── profile.py                  # Modelo Profile (perfil de usuario)
+│   │   │   ├── product.py                  # Modelo Product (producto)
+│   │   │   ├── category.py                 # Modelo Category (categoría)
+│   │   │   ├── transaction.py              # Modelo Transaction (transacción)
+│   │   │   ├── ai_log.py                   # Modelo para logs de IA
+│   │   │   └── kpi.py                      # Modelo KPI 
+│   │   ├── schemas/                        # Esquemas Pydantic para validación y serialización
+│   │   │   ├── __init__.py                 # Inicializador del paquete schemas
+│   │   │   ├── user.py                     # Esquemas de usuario (User, UserCreate, UserUpdate)
+│   │   │   ├── profile.py                  # Esquemas de perfil de usuario
+│   │   │   ├── token.py                    # Esquemas para tokens JWT (Token, TokenData)
+│   │   │   ├── product.py                  # Esquemas para productos
+│   │   │   ├── category.py                 # Esquemas para categorías
+│   │   │   ├── transaction.py              # Esquemas para transacciones
+│   │   │   ├── ai.py                       # Esquemas para IA
+│   │   │   └── kpi.py                      # Esquemas para KPIs 
+│   │   ├── security/                       # Lógica de seguridad y utilidades criptográficas
+│   │   │   ├── __init__.py                 # Inicializador del paquete security
+│   │   │   └── core.py                     # Hashing de contraseñas, creación/verificación de JWT
+│   │   └── services/                       # Lógica para interactuar con servicios externos o internos
+│   │       ├── __init__.py                 # Inicializador del paquete services   
+│   │       └── external_ai_service.py      # Servicio para consumir API de OpenAI o Gemini
+│   ├── tests/                              # Pruebas unitarias y de integración
+│   │   └── ...
+│   ├── .env                                # Variables de entorno (NO SUBIR A GIT)
+│   ├── .gitignore
+│   ├── alembic.ini                         # Configuración de Alembic
+│   └── requirements.txt                    # Dependencias de Python
+│
+├── README.md                         # Documentación general del proyecto raíz
+└── .gitignore                       # Git ignore general para todo el proyecto
