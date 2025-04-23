@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native'; // Importa Alert
-import { useAuth } from '../../hooks/useAuth'; // Ajusta la ruta
+import { useAuth } from '../../contexts/useAuth'; // Ajusta la ruta
 import Boton from '../../components/Common/Button'; // Ajusta la ruta
 import Colors from '../../constants/Colors'; // Ajusta la ruta
 import Layout from '../../constants/Layout'; // Ajusta la ruta

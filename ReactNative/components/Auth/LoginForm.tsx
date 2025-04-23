@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../contexts/useAuth';
 import CampoEntrada from '../Common/InputField';
 import Boton from '../Common/Button';
 import MensajeError from '../Common/ErrorMessage';
