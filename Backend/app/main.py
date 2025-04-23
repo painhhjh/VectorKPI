@@ -22,15 +22,15 @@ app = FastAPI(
 # - Para desarrollo local con React Native y Expo Go, puede ser la IP local de la máquina
 # - Para producción, la URL real del frontend
 
+# Lista de orígenes permitidos para CORS
 allowed_origins = [
     "http://localhost",               # localhost simple
-    "http://localhost:19000",         # Expo Go default port
-    "http://localhost:19006",         # Expo web port
-    "http://127.0.0.1",               # localhost loopback
-    "http://127.0.0.1:19000",
-    "http://192.168.1.100:19000",    # IP local ejemplo (ajustar a tu red)
-    "http://192.168.1.100:8000",     # IP local backend (ajustar)
-    "https://tu-dominio-frontend.com" # URL producción frontend (cambiar según despliegue)
+    "http://localhost:8081",         # Puerto por defecto de Expo Go
+    "http://localhost:5432",        # Puerto para PostgreSqL
+    "http://192.168.3.231",          # Loopback de localhost en red local
+    "http://192.168.3.231:8081",     # Expo Go en la IP local
+    "http://192.168.3.231:8000",     # Backend FastAPI en la IP local
+    "https://tu-dominio-frontend.com" # URL de producción del frontend (modificar según despliegue)
 ]
 
 # Filtrar orígenes vacíos o inválidos por seguridad

@@ -1,219 +1,170 @@
-//Define el Contexto de Autenticación y el Proveedor (AuthProvider). Gestiona el estado de autenticación global (token, usuario, estado) y proporciona funciones para iniciar y cerrar sesión.
+// Contexto de Autenticación para gestionar el estado del usuario y token. Provee información sobre el usuario autenticado y funciones para login/logout.
 import React, {
-  createContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  ReactNode,
-  useContext, // Importa useContext
+    createContext,
+    useState,
+    useEffect,
+    useMemo,
+    useCallback,
+    ReactNode,
 } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import clienteApi, { guardarToken, borrarToken, get } from '../services/api'; // Importa clienteApi y get
-import ApiConstants from '../constants/Api';
-import { Usuario } from '../types'; // Importa el tipo Usuario
-import { useRouter } from 'expo-router'; // Importa useRouter para la navegación
+import { router } from 'expo-router'; // Para navegación programática
 
-// Clave para guardar/recuperar el token de autenticación de forma segura
-const CLAVE_TOKEN_AUTH = 'authToken';
+import { Usuario, TokenResponse } from '../types'; // Tipos necesarios
+import { CLAVE_TOKEN_AUTH, guardarToken, borrarToken } from '../services/api'; // Funciones de token
+import { iniciarSesion, obtenerUsuarioActual } from '../services/authService'; // Funciones de autenticación
 
-// Define los posibles estados del proceso de autenticación
-type EstadoAutenticacion = 'idle' | 'cargando' | 'autenticado' | 'noAutenticado' | 'error';
-
-// Define la forma de los datos que proporcionará el contexto
-interface AuthContextData {
-  token: string | null; // El token de autenticación JWT
-  usuario: Usuario | null; // Información del usuario autenticado
-  estado: EstadoAutenticacion; // El estado actual del proceso de autenticación
-  error: string | null; // Mensaje de error si ocurre alguno
-  iniciarSesion: (credenciales: Record<string, string>) => Promise<void>; // Función para login
-  cerrarSesion: () => Promise<void>; // Función para logout
+// Define la forma del contexto
+interface AuthContextType {
+    token: string | null;
+    usuario: Usuario | null;
+    isAuthenticated: boolean;
+    isLoading: boolean; // Para saber si se está cargando el estado inicial
+    login: (email: string, password: string) => Promise<void>;
+    logout: () => void;
+    // Podrías añadir register aquí si quieres manejarlo desde el contexto
+    // register: (datos: DatosRegistro) => Promise<void>;
 }
 
-// Crea el Contexto de Autenticación
-export const AuthContext = createContext<AuthContextData | undefined>(undefined);
+// Crea el contexto con un valor inicial undefined
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Define las props para el componente Proveedor
+// Props para el proveedor del contexto
 interface AuthProviderProps {
-  children: ReactNode; // Los componentes hijos que tendrán acceso al contexto
+    children: ReactNode;
 }
 
-// Componente Proveedor que encapsula la lógica de autenticación
+// Componente Proveedor del Contexto
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [estado, setEstado] = useState<EstadoAutenticacion>('idle'); // Inicia en idle
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter(); // Hook para navegar
+    const [token, setToken] = useState<string | null>(null);
+    const [usuario, setUsuario] = useState<Usuario | null>(null);
+    const [isLoading, setIsLoading] = useState(true); // Empieza cargando
 
-  // Función para obtener los datos del usuario actual
-  const obtenerDatosUsuario = useCallback(async () => {
-    console.log('[AuthContext] Obteniendo datos del usuario...');
-    try {
-      const respuesta = await get<Usuario>(ApiConstants.USERS_ME_ENDPOINT);
-      setUsuario(respuesta.data);
-      console.log('[AuthContext] Datos del usuario obtenidos:', respuesta.data.email);
-      return respuesta.data; // Devuelve los datos del usuario
-    } catch (err) {
-      console.error('[AuthContext] Error obteniendo datos del usuario:', err);
-      // Si falla obtener los datos del usuario, consideramos cerrar la sesión
-      // ya que el token podría ser válido pero algo más está mal.
-      await cerrarSesion(); // Llama a cerrar sesión para limpiar todo
-      throw new Error('No se pudieron obtener los datos del usuario.'); // Lanza error para indicar fallo
-    }
-  }, []); // No tiene dependencias externas directas que cambien
+    // Carga inicial del token y datos del usuario al montar el provider
+    useEffect(() => {
+        const loadAuthState = async () => {
+            setIsLoading(true);
+            try {
+                const storedToken = await SecureStore.getItemAsync(CLAVE_TOKEN_AUTH);
+                if (storedToken) {
+                    console.log('[AuthContext] Token encontrado en SecureStore.');
+                    setToken(storedToken);
+                    // Si hay token, intenta obtener los datos del usuario
+                    try {
+                        const userData = await obtenerUsuarioActual(); // Llama a /users/me
+                        setUsuario(userData);
+                        console.log('[AuthContext] Datos del usuario cargados.');
+                    } catch (userError: any) {
+                        console.error('[AuthContext] Error al obtener datos del usuario con token guardado:', userError);
+                        // Si falla obtener el usuario (ej. token expirado/inválido), borra el token local
+                        if (userError.status === 401 || userError.isAuthError) {
+                            await borrarToken();
+                            setToken(null);
+                            setUsuario(null);
+                        }
+                        // Podrías mantener el token si el error es de red, pero es más simple limpiar
+                    }
+                } else {
+                    console.log('[AuthContext] No se encontró token en SecureStore.');
+                }
+            } catch (error) {
+                console.error('[AuthContext] Error al cargar estado de autenticación:', error);
+                // Asegurarse de limpiar el estado si hay error al cargar
+                setToken(null);
+                setUsuario(null);
+            } finally {
+                setIsLoading(false); // Termina la carga inicial
+            }
+        };
 
-  // Función para verificar si hay un token guardado al iniciar la app
-  const verificarAutenticacion = useCallback(async () => {
-    console.log('[AuthContext] Verificando autenticación inicial...');
-    setEstado('cargando');
-    setError(null);
-    try {
-      const tokenGuardado = await SecureStore.getItemAsync(CLAVE_TOKEN_AUTH);
-      if (tokenGuardado) {
-        console.log('[AuthContext] Token encontrado. Validando y obteniendo usuario...');
-        setToken(tokenGuardado);
-        // Importante: Añadimos el token a la instancia de Axios ANTES de llamar a obtenerDatosUsuario
-        // Aunque el interceptor lo hace, es más seguro asegurarlo aquí para la primera carga.
-        clienteApi.defaults.headers.common['Authorization'] = `Bearer ${tokenGuardado}`;
-        await obtenerDatosUsuario(); // Obtiene datos del usuario
-        setEstado('autenticado');
-        console.log('[AuthContext] Autenticación inicial exitosa.');
-      } else {
-        console.log('[AuthContext] No se encontró token. Estado: noAutenticado.');
-        setToken(null);
-        setUsuario(null);
-        setEstado('noAutenticado');
-      }
-    } catch (err: any) {
-      console.error('[AuthContext] Error verificando token:', err);
-      setError(err.message || 'Error al verificar la sesión.');
-      setEstado('error');
-      setToken(null);
-      setUsuario(null);
-      
-      // Agrega un try/catch alrededor de borrarToken()
-      try {
-        await borrarToken();
-      } catch (deleteError) {
-        console.error('[AuthContext] Error al limpiar token corrupto:', deleteError);
-      } finally {
-        clienteApi.defaults.headers.common['Authorization'] = '';
-      }
-      } // Depende de obtenerDatosUsuario
-    }, []); // Cierra verificarAutenticacion
+        loadAuthState();
+    }, []); // Se ejecuta solo una vez al montar
 
-  // Ejecuta la verificación inicial cuando el componente se monta
-  useEffect(() => {
-    verificarAutenticacion();
-  }, [verificarAutenticacion]);
+    // Función de Login
+    const login = useCallback(async (email: string, password: string) => {
+        console.log('[AuthContext] Intentando iniciar sesión...');
+        try {
+            // 1. Llama al servicio para obtener el token
+            const tokenData: TokenResponse = await iniciarSesion({ email, password });
 
-  // Función para iniciar sesión
-  const iniciarSesion = useCallback(async (credenciales: Record<string, string>) => {
-    console.log('[AuthContext] Iniciando sesión...');
-    setEstado('cargando');
-    setError(null);
-    try {
-      // --- Envío como FormData para OAuth2PasswordRequestForm ---
-      const formData = new FormData();
-      // FastAPI espera 'username', mapeamos desde 'email'
-      formData.append('username', credenciales.email);
-      formData.append('password', credenciales.password);
+            // 2. Guarda el token de forma segura
+            await guardarToken(tokenData.access_token);
 
-      console.log('[AuthContext] Enviando FormData a', ApiConstants.AUTH_LOGIN_ENDPOINT);
+            // 3. Actualiza el estado del token
+            setToken(tokenData.access_token);
 
-      const respuesta = await clienteApi.post<{ access_token: string; token_type: string }>(
-        ApiConstants.AUTH_LOGIN_ENDPOINT,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } } // Header crucial para FormData
-      );
-      // --- Fin Envío FormData ---
+            // 4. Obtiene los datos del usuario autenticado
+            try {
+                const userData = await obtenerUsuarioActual();
+                setUsuario(userData);
+                console.log('[AuthContext] Login exitoso y datos de usuario obtenidos.');
+                // 5. Navega a la pantalla principal (dashboard)
+                // Usamos replace para que el usuario no pueda volver atrás a la pantalla de login
+                router.replace('/(tabs)/dashboard');
+            } catch (userError) {
+                 console.error('[AuthContext] Login exitoso pero falló al obtener datos del usuario:', userError);
+                 // A pesar del error al obtener el usuario, el login fue exitoso (tenemos token)
+                 // Podrías intentar obtener los datos de nuevo más tarde o mostrar un estado parcial.
+                 // Por ahora, navegamos igual pero sin datos de usuario.
+                 setUsuario(null); // Asegura que no queden datos viejos
+                 router.replace('/(tabs)/dashboard');
+                 // O podrías decidir hacer logout si obtener el usuario es crítico
+                 // await logout(); throw new Error("No se pudieron obtener los datos del usuario.");
+            }
 
-      const { access_token } = respuesta.data;
+        } catch (error: any) {
+            console.error('[AuthContext] Falló el inicio de sesión:', error);
+            // Limpia cualquier estado residual en caso de fallo
+            setToken(null);
+            setUsuario(null);
+            await borrarToken(); // Asegura que no quede un token inválido
+            // Relanza el error para que el componente de UI (LoginForm) muestre el mensaje
+            throw error;
+        }
+    }, []); // useCallback sin dependencias porque las funciones externas no cambian
 
-      if (access_token) {
-        console.log('[AuthContext] Token recibido. Guardando y obteniendo usuario...');
-        await guardarToken(access_token); // Guarda el token de forma segura
-        setToken(access_token);
-         // Añade el token a futuras peticiones (aunque el interceptor también lo hará)
-         clienteApi.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+    // Función de Logout
+    const logout = useCallback(async () => {
+        console.log('[AuthContext] Realizando logout...');
+        try {
+            // 1. Borra el token de SecureStore
+            await borrarToken();
+        } catch (error) {
+            console.error('[AuthContext] Error al borrar token durante logout:', error);
+        } finally {
+            // 2. Limpia el estado local sin importar si el borrado falló
+            setToken(null);
+            setUsuario(null);
+            // 3. Redirige a la pantalla de login
+            router.replace('/(auth)/login');
+            console.log('[AuthContext] Logout completado.');
+        }
+    }, []); // useCallback sin dependencias
 
-        await obtenerDatosUsuario(); // Obtiene y guarda los datos del usuario
+    // --- Manejo de errores 401 detectados por el interceptor ---
+    // El interceptor ya borra el token. El contexto debe reaccionar cuando una
+    // llamada a un servicio (ej. obtenerKpis) falle con `isAuthError: true`.
+    // La forma más común es que el componente que hace la llamada detecte el error
+    // y llame a `logout()` desde el contexto.
+    // No se necesita lógica adicional *dentro* del contexto para esto,
+    // solo asegurar que `logout` esté disponible y sea llamado externamente.
 
-        setEstado('autenticado');
-        console.log('[AuthContext] Inicio de sesión completado.');
-        // La navegación se manejará en _layout.tsx basado en el cambio de 'estado'
+    // Valor del contexto que se pasará a los consumidores
+    const authContextValue = useMemo(
+        () => ({
+            token,
+            usuario,
+            isAuthenticated: !!token, // Es autenticado si hay un token
+            isLoading,
+            login,
+            logout,
+        }),
+        [token, usuario, isLoading, login, logout] // Dependencias del useMemo
+    );
 
-      } else {
-        throw new Error('La respuesta de la API no incluyó un token de acceso.');
-      }
-    } catch (err: any) {
-      console.error('[AuthContext] Error al iniciar sesión:', err);
-      await borrarToken(); // Borra cualquier token residual
-      clienteApi.defaults.headers.common['Authorization'] = ''; // Limpia header
-      setToken(null);
-      setUsuario(null);
-      // Establece un mensaje de error adecuado
-      let mensajeError = 'Error desconocido al iniciar sesión.';
-       if (err?.isAuthError) { // Error específico del interceptor 401
-           mensajeError = err.message;
-       } else if (err?.response?.data?.detail) {
-           mensajeError = typeof err.response.data.detail === 'string'
-               ? err.response.data.detail
-               : JSON.stringify(err.response.data.detail); // Maneja posibles objetos de error
-       } else if (typeof err?.message === 'string') {
-           mensajeError = err.message;
-       }
-      setError(mensajeError);
-      setEstado('error'); // Cambia a estado de error
-      // Lanzar el error permite a la UI reaccionar si es necesario
-      throw new Error(mensajeError); // Lanza un error con el mensaje procesado
-    }
-  }, [obtenerDatosUsuario]); // Depende de obtenerDatosUsuario
-
-  // Función para cerrar sesión
-  const cerrarSesion = useCallback(async () => {
-    console.log('[AuthContext] Cerrando sesión...');
-    try {
-      await borrarToken(); // Elimina el token del almacenamiento seguro
-    } catch (err) {
-      console.error('[AuthContext] Error al borrar token en logout:', err);
-      // Continuar de todas formas para limpiar el estado local
-    } finally {
-      // Siempre limpia el estado local y la instancia de axios
-      clienteApi.defaults.headers.common['Authorization'] = '';
-      setToken(null);
-      setUsuario(null);
-      setError(null); // Limpia errores previos
-      setEstado('noAutenticado'); // Cambia estado a no autenticado
-      console.log('[AuthContext] Sesión cerrada. Estado:', estado);
-      // La navegación se manejará en _layout.tsx basado en el cambio de 'estado'
-    }
-  }, []); // No tiene dependencias que cambien
-
-  // Memoriza el valor del contexto para evitar re-renders innecesarios
-  // Asegúrate de que el router no esté en las dependencias si no es necesario
-  const valorContexto = useMemo(() => ({
-    token,
-    usuario,
-    estado,
-    error,
-    iniciarSesion,
-    cerrarSesion,
-  }), [token, usuario, estado, error, iniciarSesion, cerrarSesion]);
-
-  return (
-    <AuthContext.Provider value={valorContexto}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-// Hook personalizado useAuth (sin cambios, pero lo incluimos por completitud)
-export const useAuth = () => {
-  const contexto = useContext(AuthContext);
-  if (contexto === undefined) {
-    throw new Error('useAuth debe ser utilizado dentro de un AuthProvider');
-  }
-  return contexto;
+    return (
+        <AuthContext.Provider value={authContextValue}>
+            {children}
+        </AuthContext.Provider>
+    );
 };

@@ -17,7 +17,7 @@ export interface KPI {
   trend: KpiTrend; // La tendencia reciente del valor del KPI
   category: KpiCategory; // Categoría a la que pertenece el KPI
   lastUpdated: string; // Cadena de fecha ISO 8601 de la última actualización
-  // Agregar campos para datos históricos si se necesitan para gráficos directamente en este objeto
+  createdAt: string; // Cadena de fecha ISO 8601 de su creación
 }
 
 // Interfaz para la estructura de la respuesta de la API al obtener una lista de KPIs

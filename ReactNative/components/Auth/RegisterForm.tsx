@@ -25,6 +25,11 @@ const FormularioRegistro: React.FC = () => {
       setErrorLocal('Por favor, completa todos los campos requeridos.');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorLocal('Por favor, ingresa un correo electrónico válido.');
+      return;
+    }
     if (password !== confirmarPassword) {
       setErrorLocal('Las contraseñas no coinciden.');
       return;

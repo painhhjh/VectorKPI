@@ -24,6 +24,9 @@
    ```bash
     npx expo start --clear 
    ```
+   ```bash
+   uvicorn app.main:app --reload --host 0.0.0.0 
+   ```
 
 si les da algún error, ejecuten    
    ```bash

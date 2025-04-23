@@ -1,153 +1,79 @@
-//Servicio para interactuar con los endpoints de la API relacionados con los KPIs.
-// Define funciones para obtener, crear, actualizar y eliminar KPIs.
-
-import clienteApi, { get, post, put, del } from './api'; // Importa la instancia y helpers
+// Servicio para gestión de KPIs usando helpers API
+import { get, post, put, del } from './api';
 import ApiConstants from '../constants/Api';
-import { KPI, KpiListResponse, KpiFilters } from '../types'; // Importa los tipos necesarios
+import { KPI, KpiListResponse, KpiFilters } from '../types';
 
-// Obtiene una lista de KPIs desde la API, opcionalmente con filtros.
+// Obtiene KPIs con filtros y paginación
 export const obtenerKpis = async (filtros?: KpiFilters): Promise<KpiListResponse> => {
-  console.log('[KpiService] Obteniendo lista de KPIs con filtros:', filtros);
   try {
-    // Construye los parámetros de consulta a partir de los filtros
-    const params: Record<string, any> = {};
-    if (filtros?.category) params.category = filtros.category;
-    if (filtros?.trend) params.trend = filtros.trend;
-    if (filtros?.dateRange) {
-      params.start_date = filtros.dateRange.start;
-      params.end_date = filtros.dateRange.end;
-    }
-    // Añade aquí otros filtros que necesites
-
-    // Realiza la petición GET usando el helper 'get'
-    const respuesta = await get<KpiListResponse>(ApiConstants.KPI_ENDPOINT, params);
-
-    console.log(`[KpiService] ${respuesta.data.results.length} KPIs obtenidos.`);
-    // Asegurarse que los datos tengan el formato correcto, especialmente las fechas
-    const kpisConFechas = respuesta.data.results.map(kpi => ({
-        ...kpi,
-        lastUpdated: kpi.lastUpdated ? new Date(kpi.lastUpdated).toISOString() : new Date().toISOString(), // Asegura formato ISO
-    }));
-
-    return { ...respuesta.data, results: kpisConFechas }; // Devuelve los datos de la respuesta
-
-  } catch (error: any) {
-    console.error('[KpiService] Error al obtener KPIs:', error);
-    // Relanza el error para que el componente que llama pueda manejarlo
+    const params = construirParams(filtros);
+    const { data } = await get<KpiListResponse>(ApiConstants.KPI_ENDPOINT, params);
+    return { ...data, results: normalizarKpis(data.results) };
+  } catch (error) {
+    console.error('[KpiService] Error obteniendo KPIs:', error);
     throw error;
   }
 };
 
-//Obtiene los detalles de un KPI específico por su ID.
-
+// Obtiene detalles de un KPI por ID
 export const obtenerDetalleKpi = async (id: string): Promise<KPI> => {
-  console.log(`[KpiService] Obteniendo detalle del KPI con ID: ${id}`);
-  if (!id) {
-    console.error('[KpiService] ID de KPI no proporcionado.');
-    throw new Error('Se requiere un ID para obtener el detalle del KPI.');
-  }
   try {
-    // Construye la URL para el endpoint específico del KPI
-    // Asegúrate que la URL sea correcta según tu API (puede necesitar o no el '/' al final)
-    const url = `${ApiConstants.KPI_ENDPOINT}/${id}/`;
-
-    // Realiza la petición GET
-    const respuesta = await get<KPI>(url);
-
-    console.log(`[KpiService] Detalle del KPI "${respuesta.data.name}" obtenido.`);
-     // Asegurarse que los datos tengan el formato correcto
-     const kpiDetalle = {
-         ...respuesta.data,
-         lastUpdated: respuesta.data.lastUpdated ? new Date(respuesta.data.lastUpdated).toISOString() : new Date().toISOString(),
-     };
-    return kpiDetalle; // Devuelve los datos del KPI específico
-
-  } catch (error: any) {
-    console.error(`[KpiService] Error al obtener detalle del KPI ${id}:`, error);
-    // Relanza el error
+    const url = `${ApiConstants.KPI_ENDPOINT}/${id}`;
+    const { data } = await get<KPI>(url);
+    return normalizarKpi(data);
+  } catch (error) {
+    console.error(`[KpiService] Error obteniendo KPI ${id}:`, error);
     throw error;
   }
 };
 
-//Crea un nuevo KPI en la API. Ajusta los campos requeridos según tu API.
-
-export const crearKpi = async (
-    nuevoKpiData: Omit<KPI, 'id' | 'lastUpdated' | 'trend'>
-): Promise<KPI> => {
-  console.log('[KpiService] Creando nuevo KPI:', nuevoKpiData);
+// Crea nuevo KPI
+export const crearKpi = async (nuevoKpi: Omit<KPI, 'id' | 'fechas'>): Promise<KPI> => {
   try {
-    // Realiza la petición POST al endpoint principal de KPIs
-    const respuesta = await post<KPI>(ApiConstants.KPI_ENDPOINT, nuevoKpiData);
-
-    console.log(`[KpiService] KPI "${respuesta.data.name}" creado con ID: ${respuesta.data.id}`);
-    // Asegurarse que los datos tengan el formato correcto
-    const kpiCreado = {
-        ...respuesta.data,
-        lastUpdated: respuesta.data.lastUpdated ? new Date(respuesta.data.lastUpdated).toISOString() : new Date().toISOString(),
-    };
-    return kpiCreado; // Devuelve el KPI creado por la API (con id, etc.)
-
-  } catch (error: any) {
-    console.error('[KpiService] Error al crear KPI:', error);
-    // Relanza el error
+    const { data } = await post<KPI>(ApiConstants.KPI_ENDPOINT, nuevoKpi);
+    return normalizarKpi(data);
+  } catch (error) {
+    console.error('[KpiService] Error creando KPI:', error);
     throw error;
   }
 };
 
-//Actualiza un KPI existente en la API.
-
-export const actualizarKpi = async (
-    id: string,
-    kpiData: Partial<Omit<KPI, 'id' | 'lastUpdated'>> // Permite actualizar campos parciales
-): Promise<KPI> => {
-  console.log(`[KpiService] Actualizando KPI con ID: ${id}`, kpiData);
-  if (!id) {
-    console.error('[KpiService] ID de KPI no proporcionado para actualizar.');
-    throw new Error('Se requiere un ID para actualizar el KPI.');
-  }
+// Actualiza KPI existente
+export const actualizarKpi = async (id: string, cambios: Partial<KPI>): Promise<KPI> => {
   try {
-    // Construye la URL para el endpoint específico del KPI
-    const url = `${ApiConstants.KPI_ENDPOINT}/${id}/`; // Ajusta si es necesario
-
-    // Realiza la petición PUT (o PATCH si tu API lo soporta)
-    const respuesta = await put<KPI>(url, kpiData);
-
-    console.log(`[KpiService] KPI "${respuesta.data.name}" actualizado.`);
-     // Asegurarse que los datos tengan el formato correcto
-     const kpiActualizado = {
-         ...respuesta.data,
-         lastUpdated: respuesta.data.lastUpdated ? new Date(respuesta.data.lastUpdated).toISOString() : new Date().toISOString(),
-     };
-    return kpiActualizado; // Devuelve el KPI actualizado
-
-  } catch (error: any) {
-    console.error(`[KpiService] Error al actualizar KPI ${id}:`, error);
-    // Relanza el error
+    const url = `${ApiConstants.KPI_ENDPOINT}/${id}`;
+    const { data } = await put<KPI>(url, cambios);
+    return normalizarKpi(data);
+  } catch (error) {
+    console.error(`[KpiService] Error actualizando KPI ${id}:`, error);
     throw error;
   }
 };
 
-//Elimina un KPI de la API por su ID.
-
+// Elimina KPI por ID
 export const eliminarKpi = async (id: string): Promise<void> => {
-  console.log(`[KpiService] Eliminando KPI con ID: ${id}`);
-  if (!id) {
-    console.error('[KpiService] ID de KPI no proporcionado para eliminar.');
-    throw new Error('Se requiere un ID para eliminar el KPI.');
-  }
   try {
-    // Construye la URL para el endpoint específico del KPI
-    const url = `${ApiConstants.KPI_ENDPOINT}/${id}/`; // Ajusta si es necesario
-
-    // Realiza la petición DELETE
-    await del(url); // Axios por defecto no devuelve datos en delete exitoso (status 204)
-
-    console.log(`[KpiService] KPI con ID: ${id} eliminado exitosamente.`);
-    // No se devuelve nada en caso de éxito
-
-  } catch (error: any) {
-    console.error(`[KpiService] Error al eliminar KPI ${id}:`, error);
-    // Relanza el error
+    const url = `${ApiConstants.KPI_ENDPOINT}/${id}`;
+    await del(url);
+  } catch (error) {
+    console.error(`[KpiService] Error eliminando KPI ${id}:`, error);
     throw error;
   }
 };
+
+// Helpers internos
+const construirParams = (filtros?: KpiFilters): Record<string, any> => ({
+  ...(filtros?.category && { category: filtros.category }),
+  ...(filtros?.trend && { trend: filtros.trend }),
+  ...(filtros?.dateRange && { 
+    start_date: filtros.dateRange.start,
+    end_date: filtros.dateRange.end
+  })
+});
+
+const normalizarKpis = (kpis: KPI[]): KPI[] => kpis.map(normalizarKpi);
+const normalizarKpi = (kpi: KPI): KPI => ({
+  ...kpi,
+  lastUpdated: kpi.lastUpdated ? new Date(kpi.lastUpdated).toISOString() : '',
+  createdAt: kpi.createdAt ? new Date(kpi.createdAt).toISOString() : ''
+});
