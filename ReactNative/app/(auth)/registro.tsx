@@ -5,11 +5,8 @@ import { View, StyleSheet, Text, SafeAreaView, ScrollView } from 'react-native';
 import FormularioRegistro from '../../components/Auth/RegisterForm';
 import Colors from '../../constants/Colors';
 import Layout from '../../constants/Layout';
-import { useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 export default function PantallaRegistro() {
-  // Usa el hook useRouter en el nivel superior del componente
-  const router = useRouter();
-
   return (
     <SafeAreaView style={estilos.safeArea}>
       <ScrollView contentContainerStyle={estilos.scrollViewContainer}>
@@ -24,10 +21,9 @@ export default function PantallaRegistro() {
           {/* Enlace para volver a Login si el usuario ya tiene cuenta */}
           <Text style={{ marginTop: Layout.spacing.medium, color: Colors.accent }}>
             ¿Ya tienes una cuenta?{' '}
-            <Text style={{ fontWeight: 'bold' }} onPress={() => router.push('../login')}
-            >
-              Inicia sesión aquí
-            </Text>
+            <Link href="/login" asChild>
+              <Text style={{ fontWeight: 'bold' }}>Inicia sesión aquí</Text>
+            </Link>
           </Text>
         </View>
       </ScrollView>

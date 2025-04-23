@@ -30,8 +30,12 @@ const FormularioRegistro: React.FC = () => {
       return;
     }
     if (password.length < 8) {
-        setErrorLocal('La contraseña debe tener al menos 8 caracteres.');
-        return;
+      setErrorLocal('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setErrorLocal('La contraseña debe contener al menos una letra y un número.');
+      return;
     }
 
     setErrorLocal(null);
