@@ -1,7 +1,4 @@
-/**
- * @file Pantalla de Configuración.
- * @description Muestra información del usuario y permite cerrar sesión.
- */
+//Pantalla de Configuración.Muestra información del usuario y permite cerrar sesión. hay que corregir
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native'; // Importa Alert
 import { useAuth } from '../../contexts/useAuth'; // Ajusta la ruta

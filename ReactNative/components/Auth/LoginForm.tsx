@@ -1,4 +1,4 @@
-// Componente de formulario para el inicio de sesión.
+// Componente de formulario para el inicio de sesión.  hay que corregir
 
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';

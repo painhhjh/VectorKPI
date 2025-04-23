@@ -1,4 +1,4 @@
-//Layout raíz de la aplicación. Configura el AuthProvider, gestiona la SplashScreen y define la navegación principal.
+//Layout raíz de la aplicación. Configura el AuthProvider, gestiona la SplashScreen y define la navegación principal. hay que corregir
 
 import React, { useEffect } from 'react';
 import { Stack, SplashScreen, useRouter, useSegments } from 'expo-router';

@@ -1,6 +1,4 @@
-/**
- * @file Pantalla para mostrar los detalles de un Producto específico.
- * @description (Placeholder) Obtiene el ID y mostrará la información detallada.
+//Pantalla para mostrar los detalles de un Producto específico. hay que corregir
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
