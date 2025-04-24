@@ -9,7 +9,7 @@ import MensajeError from '../Common/ErrorMessage';
 import Layout from '../../constants/Layout';
 
 const FormularioLogin: React.FC = () => {
-  const { iniciarSesion, estado } = useAuth(); // Obtiene la función de login y el estado
+  const { login, estado } = useAuth(); // Obtiene la función de login y el estado
   const [email, setEmail] = useState<string>(''); // Estado para el campo email/usuario
   const [password, setPassword] = useState<string>(''); // Estado para el campo contraseña
   const [errorLocal, setErrorLocal] = useState<string | null>(null); // Estado para errores específicos del formulario
@@ -28,14 +28,14 @@ const FormularioLogin: React.FC = () => {
     setErrorLocal(null); // Limpia errores previos
 
     try {
-      // Llama a la función iniciarSesion del contexto
-      await iniciarSesion({ email, password });
+      // Llama a la función login del contexto
+      await login({ email, password });
       // La navegación ocurrirá automáticamente si el login es exitoso
       // gracias a la lógica en app/_layout.tsx
-      console.log('[LoginForm] Llamada a iniciarSesion completada.');
+      console.log('[LoginForm] Llamada a login completada.');
 
     } catch (error: any) {
-      console.error('[LoginForm] Error en iniciarSesion:', error);
+      console.error('[LoginForm] Error en login:', error);
       // Muestra el error devuelto por el contexto/API
       setErrorLocal(error.message || 'Ocurrió un error al intentar iniciar sesión.');
       // Podrías usar Alert aquí también si prefieres un popup

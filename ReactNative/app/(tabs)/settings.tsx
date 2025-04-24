@@ -8,11 +8,11 @@ import Layout from '../../constants/Layout'; // Ajusta la ruta
 
 export default function PantallaConfiguracion() {
   // Obtiene datos y función de logout del contexto actualizado
-  const { usuario, cerrarSesion, estado } = useAuth();
+  const { usuario, logout, estado } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await cerrarSesion();
+      await logout();
       // La navegación a la pantalla de login es manejada por app/_layout.tsx al detectar
       // el cambio de estado a 'noAutenticado'.
       console.log('[SettingsScreen] Cierre de sesión iniciado.');

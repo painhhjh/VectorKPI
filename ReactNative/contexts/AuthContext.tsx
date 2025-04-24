@@ -9,7 +9,6 @@ import React, {
 } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router'; // Para navegación programática
-
 import { Usuario, TokenResponse } from '../types'; // Tipos necesarios
 import { CLAVE_TOKEN_AUTH, guardarToken, borrarToken } from '../services/api'; // Funciones de token
 import { iniciarSesion, obtenerUsuarioActual } from '../services/authService'; // Funciones de autenticación
@@ -20,10 +19,9 @@ interface AuthContextType {
     usuario: Usuario | null;
     isAuthenticated: boolean;
     isLoading: boolean; // Para saber si se está cargando el estado inicial
-    login: (email: string, password: string) => Promise<void>;
+    login: (credenciales: { email: string; password: string }) => Promise<void>;
     logout: () => void;
-    // Podrías añadir register aquí si quieres manejarlo desde el contexto
-    // register: (datos: DatosRegistro) => Promise<void>;
+    estado:  'cargando' | 'idle' | 'autenticado' | 'noAutenticado' | 'error';
 }
 
 // Crea el contexto con un valor inicial undefined
@@ -81,7 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, []); // Se ejecuta solo una vez al montar
 
     // Función de Login
-    const login = useCallback(async (email: string, password: string) => {
+    const login = useCallback(async ({ email, password }: { email: string; password: string }) => {
         console.log('[AuthContext] Intentando iniciar sesión...');
         try {
             // 1. Llama al servicio para obtener el token
@@ -150,7 +148,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // solo asegurar que `logout` esté disponible y sea llamado externamente.
 
     // Valor del contexto que se pasará a los consumidores
-    const authContextValue = useMemo(
+    const authContextValue: AuthContextType = useMemo(
         () => ({
             token,
             usuario,
@@ -158,6 +156,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             isLoading,
             login,
             logout,
+            estado: isLoading
+                ? 'cargando'
+                : token
+                ? 'autenticado'
+                : 'noAutenticado', // Define el estado basado en el contexto actual
         }),
         [token, usuario, isLoading, login, logout] // Dependencias del useMemo
     );

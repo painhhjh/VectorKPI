@@ -1,5 +1,4 @@
 //Pantalla para mostrar los detalles de un Producto específico. hay que corregir
- */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
@@ -35,7 +34,7 @@ export default function PantallaDetalleProducto() {
       const detalle = await obtenerDetalleProducto(productoId);
       setProducto(detalle);
       setEstadoCarga('exito');
-      console.log(`[ProductDetail] Detalle cargado para: ${detalle.name}`);
+      console.log(`[ProductDetail] Detalle cargado para: ${detalle.name || 'Producto sin nombre'}`);
     } catch (err: any) {
       console.error(`[ProductDetail] Error al cargar detalle del producto ${id}:`, err);
       setError(err.message || 'No se pudo cargar el detalle del producto.');

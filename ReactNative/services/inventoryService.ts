@@ -25,9 +25,22 @@ export const crearCategoria = async (datos: Omit<Categoria, 'id'>): Promise<Cate
   }
 };
 
+// Obtiene los detalles de un producto por su ID
+export const obtenerDetalleProducto = async (productoId: number): Promise<Producto> => {
+ 
+  try {
+     const { data } = await get<Producto>(`${ApiConstants.INVENTORY_PRODUCTS_ENDPOINT}/${productoId}`);
+     return normalizarProducto(data);
+   } catch (error) {
+     console.error('[InventoryService] Error obteniendo detalles del producto:', error);
+     throw error;
+   }
+ };
+
 // Obtiene productos con filtro opcional
 export const obtenerProductos = async (categoriaId?: number): Promise<ListaProductosResponse> => {
-  try {
+ 
+ try {
     const params = categoriaId ? { category_id: categoriaId } : {};
     const { data } = await get<ListaProductosResponse>(ApiConstants.INVENTORY_PRODUCTS_ENDPOINT, params);
     return normalizarProductos(data);
@@ -59,7 +72,6 @@ export const obtenerTransacciones = async (productoId?: number): Promise<Transac
     throw error;
   }
 };
-
 // Helpers internos
 const normalizarProductos = (respuesta: ListaProductosResponse): ListaProductosResponse => ({
   count: respuesta.count,

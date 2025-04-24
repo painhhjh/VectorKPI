@@ -22,7 +22,7 @@ function NavegacionInicial() {
     const enGrupoTabs = segments[0] === '(tabs)';
 
     // Si el estado ya no es 'cargando'
-    if (estado !== 'cargando' && estado !== 'idle') {
+    if (estado === 'autenticado' || estado === 'noAutenticado' || estado === 'error') {
       if (estado === 'autenticado' && !enGrupoTabs) {
         // Usuario autenticado, navegar a la sección principal (tabs)
         console.log('[RootLayout] Usuario autenticado, redirigiendo a (tabs)');
