@@ -1,5 +1,5 @@
-// Ejemplo en constants/Api.ts
-const API_IP = '192.168.3.231'; // <-- CAMBIA ESTO POR TU IP LOCAL
+// constants/Api.ts
+const API_IP = '127.0.0.1'; // Cambia esto por tu IP local si es necesario
 const API_PORT = 8000; // Puerto donde corre FastAPI
 const API_VERSION = 'v1';
 
@@ -9,19 +9,34 @@ console.log(`[API Constants] Conectando a la API en: ${BASE_URL}`);
 
 const ApiConstants = {
     BASE_URL,
-    // Endpoints de KPIs
-    KPI_ENDPOINT: '/kpis',
-    // Endpoints de Autenticación
-    AUTH_LOGIN_ENDPOINT: '/auth/token',
-    AUTH_REGISTER_ENDPOINT: '/users/',
-    AUTH_FORGOT_PASSWORD_ENDPOINT: '/auth/forgot-password',
-    AUTH_RESET_PASSWORD_ENDPOINT: '/auth/reset-password',
-    USERS_ME_ENDPOINT: '/users/me',
-    // Endpoints de Inventario
-    INVENTORY_CATEGORIES_ENDPOINT: '/inventory/categories',
-    INVENTORY_PRODUCTS_ENDPOINT: '/inventory/products',
-    INVENTORY_TRANSACTIONS_ENDPOINT: '/inventory/transactions',
-    AI_ADVICE_ENDPOINT: '/ai/advice',
-  };
+    
+    // Autenticación
+    AUTH_LOGIN: '/auth/token',
+    AUTH_TEST_TOKEN: '/auth/test-token',
+    AUTH_FORGOT_PASSWORD: '/auth/forgot-password',
+    AUTH_RESET_PASSWORD: '/auth/reset-password',
+    
+    // Usuarios
+    USERS: '/users',
+    USERS_ME: '/users/me',
+    
+    // Inventario
+    INVENTORY_CATEGORIES: '/inventory/categories',
+    INVENTORY_PRODUCTS: '/inventory/products',
+    INVENTORY_TRANSACTIONS: '/inventory/transactions',
+    
+    // KPIs
+    KPIS: '/kpis',
+    
+    // IA
+    AI_ADVICE: '/ai/advice'
+};
 
-  export default ApiConstants;
+// Funciones helper para URLs dinámicas
+export const getKpiUrl = (id: number) => `${ApiConstants.KPIS}/${id}`;
+export const getUserUrl = (id: number) => `${ApiConstants.USERS}/${id}`;
+export const getCategoryUrl = (id: number) => `${ApiConstants.INVENTORY_CATEGORIES}/${id}`;
+export const getProductUrl = (id: number) => `${ApiConstants.INVENTORY_PRODUCTS}/${id}`;
+export const getTransactionUrl = (id: number) => `${ApiConstants.INVENTORY_TRANSACTIONS}/${id}`;
+
+export default ApiConstants;

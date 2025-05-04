@@ -8,7 +8,7 @@ export type KpiCategory = 'perforación' | 'producción' | 'logística' | 'segur
 
 // Interfaz que representa un solo punto de datos de un KPI
 export interface KPI {
-  id: string; // Identificador único para el KPI
+  id: string | number; // Identificador único para el KPI
   name: string; // Nombre de visualización del KPI (por ejemplo, "Eficiencia de Perforación")
   description?: string; // Descripción más larga opcional
   value: number; // El valor actual del KPI
@@ -18,6 +18,7 @@ export interface KPI {
   category: KpiCategory; // Categoría a la que pertenece el KPI
   lastUpdated: string; // Cadena de fecha ISO 8601 de la última actualización
   createdAt: string; // Cadena de fecha ISO 8601 de su creación
+  progreso?: number;
 }
 
 // Interfaz para la estructura de la respuesta de la API al obtener una lista de KPIs
@@ -56,7 +57,7 @@ export interface CreateKpiRequest {
 
 // Interfaz para la estructura de la solicitud de actualización de un KPI existente
 export interface UpdateKpiRequest {
-  id: string;
+  id: string | number;
   name?: string;
   description?: string;
   value?: number;

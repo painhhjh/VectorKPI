@@ -2,6 +2,7 @@
 import { post, get } from './api';
 import ApiConstants from '../constants/Api';
 import { Usuario } from '../types';
+import { AxiosHeaders } from 'axios';
 
 // Tipos ==========================================================================================
 interface DatosRegistro {
@@ -38,8 +39,11 @@ export const iniciarSesion = async (credenciales: DatosLogin): Promise<Respuesta
     formData.append('password', credenciales.password);
     
     const { data } = await post<RespuestaToken>(
-      ApiConstants.AUTH_LOGIN_ENDPOINT, 
-      formData
+      ApiConstants.AUTH_LOGIN, 
+      formData,
+      {
+        headers: new AxiosHeaders({ 'Content-Type': 'multipart/form-data' })
+      }
     );
     
     return data;  // <-- Devuelve todo el objeto token
@@ -55,12 +59,10 @@ export const obtenerUsuarioActual = async (): Promise<Usuario> => {
   console.log('[AuthService] Obteniendo usuario actual');
   
   try {
-    const respuesta = await get<Usuario>(ApiConstants.USERS_ME_ENDPOINT);
-    return respuesta.data;
-
+    const { data } = await get<Usuario>(ApiConstants.USERS_ME);
+    return data;
   } catch (error: any) {
-    console.error('[AuthService] Error al obtener usuario:', error);
-    throw error;
+    throw new Error('Error al obtener usuario actual: ' + error.message);
   }
 };
 
@@ -71,21 +73,13 @@ export const registrarUsuario = async (
   console.log('[AuthService] Registrando usuario:', datosRegistro.email);
   
   try {
-    const respuesta = await post<RespuestaRegistro>(
-      ApiConstants.AUTH_REGISTER_ENDPOINT,
-      {
-        email: datosRegistro.email,
-        password: datosRegistro.password,
-        ...(datosRegistro.nombre && { nombre: datosRegistro.nombre })
-      }
+    const { data } = await post<RespuestaRegistro>(
+      ApiConstants.USERS,
+      datosRegistro
     );
-
-    console.log('[AuthService] Registro exitoso:', respuesta.data);
-    return respuesta.data;
-
+    return data;
   } catch (error: any) {
-    console.error('[AuthService] Error en registro:', error);
-    throw error;
+    throw new Error('Error en registro: ' + error.response?.data?.detail || error.message);
   }
 };
 
@@ -96,16 +90,15 @@ export const solicitarRecuperacionPassword = async (email: string): Promise<void
   console.log('[AuthService] Solicitud recuperación para:', email);
   
   try {
-    await post(ApiConstants.AUTH_FORGOT_PASSWORD_ENDPOINT, { email });
-    console.log('[AuthService] Solicitud enviada exitosamente');
-
+    await post(ApiConstants.AUTH_FORGOT_PASSWORD, { email },
+      {
+        headers: new AxiosHeaders({ 'Content-Type': 'application/json' })
+      }
+    );
   } catch (error: any) {
-    console.error('[AuthService] Error en solicitud:', error);
-    throw error;
+    throw new Error('Error en solicitud de recuperación: ' + error.message);
   }
 };
-
-//Restablece la contraseña usando un token de recuperación
 
 export const restablecerPassword = async (
   token: string,
@@ -114,15 +107,16 @@ export const restablecerPassword = async (
   console.log('[AuthService] Restableciendo contraseña');
   
   try {
-    await post(ApiConstants.AUTH_RESET_PASSWORD_ENDPOINT, {
-      token,
-      new_password: nuevaPassword
-    });
-    
-    console.log('[AuthService] Contraseña actualizada');
-
+    await post(ApiConstants.AUTH_RESET_PASSWORD,
+      {
+        token,
+        new_password: nuevaPassword
+      },
+      {
+        headers: new AxiosHeaders({ 'Content-Type': 'application/json' })
+      }
+    );
   } catch (error: any) {
-    console.error('[AuthService] Error en restablecimiento:', error);
-    throw error;
+    throw new Error('Error al restablecer contraseña: ' + error.message);
   }
 };

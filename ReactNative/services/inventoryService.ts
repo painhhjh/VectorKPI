@@ -1,59 +1,75 @@
 // Servicio para gestión de inventario usando helpers API
-import { get, post } from './api';
-import ApiConstants from '../constants/Api';
+import { get, post, put, del } from './api';
+import ApiConstants, { getCategoryUrl, getProductUrl, getTransactionUrl } from '../constants/Api';
 import { Categoria, Producto, Transaccion, ListaProductosResponse } from '../types';
 
 // Obtiene todas las categorías
 export const obtenerCategorias = async (): Promise<Categoria[]> => {
   try {
-    const { data } = await get<Categoria[]>(ApiConstants.INVENTORY_CATEGORIES_ENDPOINT);
-    return data.map(c => ({...c, created_at: c.created_at ? new Date(c.created_at).toISOString() : ''}));
+    const { data } = await get<Categoria[]>(ApiConstants.INVENTORY_CATEGORIES);
+    return data.map(normalizarCategoria);
   } catch (error) {
-    console.error('[InventoryService] Error obteniendo categorías:', error);
-    throw error;
+    throw new Error(`Error obteniendo categorías: ${(error as Error).message}`);
+  }
+};
+
+export const obtenerCategoriaPorId = async (id: number): Promise<Categoria> => {
+  try {
+    const url = getCategoryUrl(id);
+    const { data } = await get<Categoria>(url);
+    return normalizarCategoria(data);
+  } catch (error) {
+    throw new Error(`Error obteniendo categoría ${id}: ${(error as Error).message}`);
   }
 };
 
 // Crea nueva categoría
 export const crearCategoria = async (datos: Omit<Categoria, 'id'>): Promise<Categoria> => {
   try {
-    const { data } = await post<Categoria>(ApiConstants.INVENTORY_CATEGORIES_ENDPOINT, datos);
-    return {...data, created_at: data.created_at ? new Date(data.created_at).toISOString() : ''};
+    const { data } = await post<Categoria>(ApiConstants.INVENTORY_CATEGORIES, datos);
+    return { ...data, created_at: data.created_at ? new Date(data.created_at).toISOString() : '' };
   } catch (error) {
     console.error('[InventoryService] Error creando categoría:', error);
     throw error;
   }
 };
 
-// Obtiene los detalles de un producto por su ID
-export const obtenerDetalleProducto = async (productoId: number): Promise<Producto> => {
- 
-  try {
-     const { data } = await get<Producto>(`${ApiConstants.INVENTORY_PRODUCTS_ENDPOINT}/${productoId}`);
-     return normalizarProducto(data);
-   } catch (error) {
-     console.error('[InventoryService] Error obteniendo detalles del producto:', error);
-     throw error;
-   }
- };
 
-// Obtiene productos con filtro opcional
-export const obtenerProductos = async (categoriaId?: number): Promise<ListaProductosResponse> => {
- 
- try {
-    const params = categoriaId ? { category_id: categoriaId } : {};
-    const { data } = await get<ListaProductosResponse>(ApiConstants.INVENTORY_PRODUCTS_ENDPOINT, params);
+// Productos ======================================================================================
+
+export const obtenerProductos = async (
+  categoriaId?: number,
+  pagina: number = 1,
+  porPagina: number = 20
+): Promise<ListaProductosResponse> => {
+  try {
+    const params = {
+      ...(categoriaId && { category_id: categoriaId }),
+      page: pagina,
+      per_page: porPagina
+    };
+    
+    const { data } = await get<ListaProductosResponse>(ApiConstants.INVENTORY_PRODUCTS, params);
     return normalizarProductos(data);
   } catch (error) {
-    console.error('[InventoryService] Error obteniendo productos:', error);
-    throw error;
+    throw new Error(`Error obteniendo productos: ${(error as Error).message}`);
+  }
+};
+
+export const obtenerDetalleProducto = async (id: number): Promise<Producto> => {
+  try {
+    const url = getProductUrl(id);
+    const { data } = await get<Producto>(url);
+    return normalizarProducto(data);
+  } catch (error) {
+    throw new Error(`Error obteniendo producto ${id}: ${(error as Error).message}`);
   }
 };
 
 // Crea nuevo producto
 export const crearProducto = async (datos: Omit<Producto, 'id'>): Promise<Producto> => {
   try {
-    const { data } = await post<Producto>(ApiConstants.INVENTORY_PRODUCTS_ENDPOINT, datos);
+    const { data } = await post<Producto>(ApiConstants.INVENTORY_PRODUCTS, datos);
     return normalizarProducto(data);
   } catch (error) {
     console.error('[InventoryService] Error creando producto:', error);
@@ -61,26 +77,98 @@ export const crearProducto = async (datos: Omit<Producto, 'id'>): Promise<Produc
   }
 };
 
-// Obtiene transacciones con filtro opcional
-export const obtenerTransacciones = async (productoId?: number): Promise<Transaccion[]> => {
+export const actualizarProducto = async (
+  id: number,
+  cambios: Partial<Omit<Producto, 'id'>>
+): Promise<Producto> => {
   try {
-    const params = productoId ? { product_id: productoId } : {};
-    const { data } = await get<Transaccion[]>(ApiConstants.INVENTORY_TRANSACTIONS_ENDPOINT, params);
-    return data.map(t => ({...t, timestamp: t.timestamp ? new Date(t.timestamp).toISOString() : ''}));
+    const url = getProductUrl(id);
+    const { data } = await put<Producto>(url, cambios);
+    return normalizarProducto(data);
   } catch (error) {
-    console.error('[InventoryService] Error obteniendo transacciones:', error);
-    throw error;
+    console.error(`[InventoryService] Error actualizando producto ${id}:`, error);
+    throw new Error(`Error actualizando producto ${id}: ${(error as Error).message}`);
   }
 };
-// Helpers internos
-const normalizarProductos = (respuesta: ListaProductosResponse): ListaProductosResponse => ({
-  count: respuesta.count,
-  results: respuesta.results.map(normalizarProducto)
+
+export const eliminarProducto = async (id: number): Promise<void> => {
+  try {
+    const url = getProductUrl(id);
+    await del(url);
+  } catch (error) {
+    throw new Error(`Error eliminando producto ${id}: ${(error as Error).message}`);
+  }
+};
+
+// Transacciones ==================================================================================
+
+export const obtenerTransacciones = async (
+  productoId?: number,
+  pagina: number = 1,
+  porPagina: number = 50
+): Promise<Transaccion[]> => {
+  try {
+    const params = {
+      ...(productoId && { product_id: productoId }),
+      page: pagina,
+      per_page: porPagina
+    };
+
+    const { data } = await get<Transaccion[]>(ApiConstants.INVENTORY_TRANSACTIONS, params);
+    return data.map(normalizarTransaccion);
+  } catch (error) {
+    throw new Error(`Error obteniendo transacciones: ${(error as Error).message}`);
+  }
+};
+
+export const obtenerDetalleTransaccion = async (id: number): Promise<Transaccion> => {
+  try {
+    const url = getTransactionUrl(id);
+    const { data } = await get<Transaccion>(url);
+    return normalizarTransaccion(data);
+  } catch (error) {
+    throw new Error(`Error obteniendo transacción ${id}: ${(error as Error).message}`);
+  }
+};
+
+export const crearTransaccion = async (datos: Omit<Transaccion, 'id'>): Promise<Transaccion> => {
+  try {
+    const { data } = await post<Transaccion>(ApiConstants.INVENTORY_TRANSACTIONS, datos);
+    return normalizarTransaccion(data);
+  } catch (error) {
+    console.error('[InventoryService] Error creando transacción:', error);
+    throw new Error(`Error creando transacción: ${(error as Error).message}`);
+  }
+};
+
+// Helpers de Normalización =======================================================================
+
+const normalizarCategoria = (categoria: Categoria): Categoria => ({
+  ...categoria,
+  created_at: normalizarFecha(categoria.created_at),
+  updated_at: categoria.updated_at ? normalizarFecha(categoria.updated_at) : ''
 });
 
 const normalizarProducto = (producto: Producto): Producto => ({
   ...producto,
   price: Number(producto.price) || 0,
-  created_at: producto.created_at ? new Date(producto.created_at).toISOString() : '',
-  updated_at: producto.updated_at ? new Date(producto.updated_at).toISOString() : ''
+  created_at: normalizarFecha(producto.created_at),
+  updated_at: producto.updated_at ? normalizarFecha(producto.updated_at) : '',
+  category: producto.category ? normalizarCategoria(producto.category) : undefined
 });
+
+const normalizarTransaccion = (transaccion: Transaccion): Transaccion => ({
+  ...transaccion,
+  timestamp: normalizarFecha(transaccion.timestamp),
+  product: transaccion.product ? normalizarProducto(transaccion.product) : undefined
+});
+
+const normalizarProductos = (respuesta: ListaProductosResponse): ListaProductosResponse => ({
+  ...respuesta,
+  results: respuesta.results.map(normalizarProducto)
+});
+
+const normalizarFecha = (fecha?: string | Date): string => {
+  if (!fecha) return '';
+  return new Date(fecha).toISOString();
+};

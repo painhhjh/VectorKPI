@@ -114,7 +114,7 @@ const FormularioRegistro: React.FC = () => {
       {/* Campo de Contraseña */}
       <CampoEntrada
         etiqueta="Contraseña"
-        placeholder="Mínimo 8 caracteres"
+        placeholder="Mínimo 8 caracteres, incluyendo una letra y un numero"
         value={password}
         onChangeText={setPassword}
         secureTextEntry

@@ -123,5 +123,6 @@ VectorKPI/
 │   ├── alembic.ini                         # Configuración de Alembic
 │   └── requirements.txt                    # Dependencias de Python
 │
-├── README.md                         # Documentación general del proyecto raíz
-└── .gitignore                       # Git ignore general para todo el proyecto
+├── tesis_kpi_db.sql                        # base de datos
+├── README.md                               # Documentación general del proyecto raíz
+└── .gitignore                              # Git ignore general para todo el proyecto

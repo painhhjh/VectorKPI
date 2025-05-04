@@ -55,7 +55,7 @@ def test_token(current_user: ActiveUser):
 @router.post("/forgot-password")
 async def forgot_password(
     email: Annotated[str, Body(..., embed=True)],
-    db: DbSession = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]  # Usando Annotated para Depends
 ) -> Any:
     """
     Endpoint para solicitar recuperación de contraseña.
@@ -78,7 +78,7 @@ async def forgot_password(
 async def reset_password(
     token: Annotated[str, Body(..., embed=True)],
     new_password: Annotated[str, Body(..., embed=True)],
-    db: DbSession = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]  # Sin "= Depends()"
 ) -> Any:
     """
     Endpoint para cambiar la contraseña.
