@@ -43,7 +43,7 @@ def login_for_access_token(
 
 @router.post("/test-token", response_model=UserRead)
 def test_token(current_user: ActiveUser):
-        """
+    """
     Endpoint de prueba para verificar que el token funciona
     y la dependencia `get_current_active_user` recupera al usuario.
     """

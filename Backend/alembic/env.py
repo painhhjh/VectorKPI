@@ -12,8 +12,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from app.core.config import settings  # Importa la configuración
 from app.db.base import Base         # Importa la base de modelos
-from app.models import user, profile # Importa todos los modelos
-# from app.models import product, category, transaction # esto es para después
+from app.models import user, profile, product, category, transaction, kpi, ai_log
+
 
 DATABASE_URL = settings.DATABASE_URL # Obtiene la URL de la base de datos
 
