@@ -31,6 +31,24 @@ class Settings(BaseSettings):
     # Para desarrollo con Expo Go, podrías necesitar http://localhost:8081 o tu IP local
     BACKEND_CORS_ORIGINS: list[str] = os.getenv("BACKEND_CORS_ORIGINS", "*").split(",")
 
+    # --- Configuración de Email (Ejemplo - AJUSTAR SEGÚN TU PROVEEDOR) ---
+    # Esto debería ir idealmente en config.py o ser cargado desde .env
+    # Asegúrate de tener variables de entorno como MAIL_USERNAME, MAIL_PASSWORD, etc.
+    # if settings.EMAILS_ENABLED: # Considera usar una bandera en settings
+    #     email_conf = ConnectionConfig(
+    #           MAIL_USERNAME = settings.MAIL_USERNAME, # Usar settings
+    #           MAIL_PASSWORD = settings.MAIL_PASSWORD, # Usar settings
+    #           MAIL_FROM = EmailStr(settings.MAIL_FROM), # Usar settings y validar
+    #           MAIL_PORT = settings.MAIL_PORT, # Usar settings
+    #           MAIL_SERVER = settings.MAIL_SERVER, # Usar settings
+    #           MAIL_STARTTLS = settings.MAIL_STARTTLS, # Usar settings
+    #           MAIL_SSL_TLS = settings.MAIL_SSL_TLS, # Usar settings
+    #           USE_CREDENTIALS = settings.USE_CREDENTIALS, # Usar settings
+    #           VALIDATE_CERTS = settings.VALIDATE_CERTS # Usar settings
+    #     )
+    #     fm = FastMail(email_conf)
+    # --------------------------------------------------------------------
+
 
     class Config:
         case_sensitive = True

@@ -49,8 +49,8 @@ export default function PantallaConfiguracion() {
           onPress={handleLogout}
           variante="peligro" // Botón rojo para logout
           // Deshabilita el botón mientras el estado de AuthContext sea 'cargando'
-          deshabilitado={estado === 'cargando'}
-          cargando={estado === 'cargando'} // Muestra spinner si está en proceso
+          deshabilitado={estado === 'cargando-login'}
+          cargando={estado === 'cargando-login'} // Muestra spinner si está en proceso
           estiloContenedor={estilos.botonLogout}
         />
       </View>

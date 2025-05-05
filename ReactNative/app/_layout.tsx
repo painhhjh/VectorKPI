@@ -49,7 +49,7 @@ function NavegacionInicial() {
   }, [estado, token, segments, router]); // Dependencias del efecto
 
   // Mientras carga el estado de auth, no muestra nada o un indicador global
-  if (estado === 'cargando' || estado === 'idle') {
+  if (estado === 'cargando-login' || estado === 'inicializando') {
      // Mantenemos la SplashScreen visible (no la ocultamos) o mostramos un loader
      return <IndicadorCarga />; // Opcional: mostrar un loader aquí
     // Devolver null es más común mientras SplashScreen está activa

@@ -19,8 +19,8 @@ const ApiConstants = {
     AUTH_RESET_PASSWORD: 'auth/reset-password',
 
     // Usuarios
-    USERS: 'users', // Para POST (registro) y GET (listar, si es admin)
-    USERS_ME: 'users/me', // Para GET y PUT del usuario actual
+    USER: 'user', // Para POST (registro) y GET (listar, si es admin)
+    USER_ME: 'user/me', // Para GET y PUT del usuario actual
 
     // Inventario
     INVENTORY_CATEGORIES: 'inventory/categories',
@@ -36,7 +36,7 @@ const ApiConstants = {
 
 // Funciones helper para URLs dinámicas
 export const getKpiUrl = (id: number | string) => `${ApiConstants.BASE_URL}/${ApiConstants.KPIS}/${id}`;
-export const getUserUrl = (id: number | string) => `${ApiConstants.BASE_URL}/${ApiConstants.USERS}/${id}`;
+export const getUserUrl = (id: number | string) => `${ApiConstants.BASE_URL}/${ApiConstants.USER}/${id}`;
 export const getCategoryUrl = (id: number | string) => `${ApiConstants.BASE_URL}/${ApiConstants.INVENTORY_CATEGORIES}/${id}`;
 export const getProductUrl = (id: number | string) => `${ApiConstants.BASE_URL}/${ApiConstants.INVENTORY_PRODUCTS}/${id}`;
 export const getTransactionUrl = (id: number | string) => `${ApiConstants.BASE_URL}/${ApiConstants.INVENTORY_TRANSACTIONS}/${id}`;

@@ -70,7 +70,7 @@ async def forgot_password(
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
 
-    security_core.send_password_reset_email(email=user.email)
+    await security_core.send_password_reset_email(email=user.email)
     return {"msg": "Password reset email sent"}
 
 

@@ -66,7 +66,7 @@ export const iniciarSesion = async (credenciales: DatosLogin): Promise<TokenResp
 };
 
 export const obtenerUsuarioActual = async (): Promise<Usuario> => {
-  const url = ApiConstants.USERS_ME; // Ruta relativa
+  const url = ApiConstants.USER_ME; // Ruta relativa
   console.log(`[AuthService] Obteniendo usuario actual desde ${ApiConstants.BASE_URL}/${url}...`);
   try {
     const { data } = await get<Usuario>(url);
@@ -82,7 +82,7 @@ export const obtenerUsuarioActual = async (): Promise<Usuario> => {
 export const registrarUsuario = async (
   datosRegistro: DatosRegistro
 ): Promise<RespuestaRegistro> => {
-  const url = ApiConstants.USERS; // Ruta relativa
+  const url = ApiConstants.USER; // Ruta relativa
   console.log(`[AuthService] Registrando usuario: ${datosRegistro.email} en ${ApiConstants.BASE_URL}/${url}`);
   try {
     const { data } = await post<RespuestaRegistro>(

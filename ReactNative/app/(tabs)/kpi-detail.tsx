@@ -50,7 +50,7 @@ export default function PantallaDetalleKpi() {
     setError(null);
 
     try {
-      const detalle = await obtenerDetalleKpi(id);
+      const detalle = await obtenerDetalleKpi(Number(id));
       setKpi(detalle);
       // --- ¡¡¡Simulación de datos para el gráfico!!! ---
       // TODO: Reemplaza esto con la lógica para obtener datos históricos reales desde tu API
