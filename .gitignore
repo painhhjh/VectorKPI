@@ -44,6 +44,5 @@ __pycache__/
 venv/
 .env/
 
-peticion.txt
 cambios.txt
-bc.txt
+peticion.txt

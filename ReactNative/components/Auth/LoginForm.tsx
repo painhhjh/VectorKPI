@@ -1,7 +1,5 @@
 // ReactNative/components/Auth/LoginForm.tsx
-
 // Componente de formulario para el inicio de sesión.
-// CORRECCIÓN: Simplifica el manejo de errores, confiando en el mensaje del servicio/contexto.
 
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native'; // Removido Alert, usar MensajeError
@@ -18,7 +16,7 @@ const FormularioLogin: React.FC = () => {
   const [errorLocal, setErrorLocal] = useState<string | null>(null); // Para errores específicos del formulario o de la API
 
   // Determina si el formulario está en proceso de envío (usando el estado del contexto)
-  const estaCargando = estado === 'cargando';
+  const estaCargando = estado === 'cargando-login';
 
   // Manejador para el envío del formulario
   const manejarSubmit = async () => {

@@ -1,7 +1,6 @@
 // ReactNative/components/Auth/RegisterForm.tsx
-
 // Componente de formulario para el registro de nuevos usuarios.
-// CORRECCIÓN: Simplifica manejo de errores y usa Alert para éxito.
+
 
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
@@ -11,6 +10,14 @@ import Boton from '../Common/Button';
 import MensajeError from '../Common/ErrorMessage';
 import Layout from '../../constants/Layout';
 import { registrarUsuario } from '../../services/authService';
+
+interface RespuestaRegistroBackend {
+  id: number;
+  email: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string | null;
+}
 
 const FormularioRegistro: React.FC = () => {
   const router = useRouter();
@@ -47,40 +54,39 @@ const FormularioRegistro: React.FC = () => {
       setErrorLocal('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
-    // Validación de complejidad (ejemplo: letra y número) - AJUSTA SEGÚN NECESITES
+    // Validación de complejidad (ejemplo: letra y número)
     if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
       setErrorLocal('La contraseña debe contener letras y números.');
       return;
     }
 
-    // Si pasa validaciones, procede a llamar al servicio
     setCargando(true);
 
     try {
-      // --- Llamada REAL a la API ---
-      const datosRegistro = {
-          email,
-          password,
-          // Envía el nombre solo si el usuario lo ingresó
-          ...(nombre && { nombre: nombre })
-      };
+      //Llamada REAL a la API
+      const datosRegistro = { email, password }; // Sin nombre por ahora
+          // 'nombre' no está en UserCreate, si quieres enviarlo,
+          // necesitarías añadirlo al schema UserCreate en el backend
+          // y potencialmente a ProfileCreate si va en el perfil.
+          // Si 'nombre' es para el perfil:
+          // profile: { full_name: nombre } // Asumiendo que va en full_name
       console.log('[RegisterForm] Enviando datos de registro:', datosRegistro.email);
 
       // Llama a la función del servicio de autenticación
-      const respuesta = await registrarUsuario(datosRegistro);
-
+      // La respuesta debería coincidir con UserRead según el backend
+      const respuesta: RespuestaRegistroBackend = await registrarUsuario(datosRegistro);
       console.log('[RegisterForm] Registro exitoso:', respuesta);
       // Muestra alerta de éxito y redirige al login al presionar OK
       Alert.alert(
         'Registro Exitoso',
-        respuesta.mensaje || 'Tu cuenta ha sido creada. Ahora puedes iniciar sesión.',
+        // Puedes usar un mensaje genérico o datos de la respuesta si es útil
+        `Cuenta para ${respuesta.email} creada. Ahora puedes iniciar sesión.`,
         [{ text: 'OK', onPress: () => router.push('/(auth)/login') }]
       );
-      // --- Fin Llamada API ---
-
     } catch (error: any) {
       console.error('[RegisterForm] Error atrapado desde el servicio:', error);
       // Muestra el error devuelto por el servicio (que ya debería estar formateado)
+      // Incluyendo el error de email duplicado del backend
       setErrorLocal(error.message || 'Ocurrió un error durante el registro.');
     } finally {
       setCargando(false); // Desactiva el indicador de carga
@@ -92,9 +98,9 @@ const FormularioRegistro: React.FC = () => {
       {/* Muestra el error local si existe */}
       {errorLocal && <MensajeError mensaje={errorLocal} />}
 
-      {/* Campo de Nombre (Opcional) */}
-      <CampoEntrada
-        etiqueta="Nombre (Opcional)"
+      {/* Campo de Nombre (a futuro) */}
+      {/* <CampoEntrada
+        etiqueta="Nombre Completo (Opcional)"
         placeholder="Tu nombre"
         value={nombre}
         onChangeText={setNombre}
@@ -102,7 +108,7 @@ const FormularioRegistro: React.FC = () => {
         autoComplete="name"
         editable={!cargando}
         returnKeyType="next"
-      />
+      /> */}
 
       {/* Campo de Email */}
       <CampoEntrada
@@ -125,7 +131,6 @@ const FormularioRegistro: React.FC = () => {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        // Evita sugerencias de contraseñas guardadas si es un registro nuevo
         autoComplete="password-new"
         textContentType="newPassword" // Ayuda a gestores de contraseñas
         editable={!cargando}
@@ -142,28 +147,27 @@ const FormularioRegistro: React.FC = () => {
         editable={!cargando}
         returnKeyType="done" // Último campo antes del botón
         onSubmitEditing={!cargando ? manejarSubmit : undefined}
-        />
+      />
 
-        {/* Botón de Registro */}
-        <Boton
-          titulo="Crear Cuenta"
-          onPress={manejarSubmit}
-          deshabilitado={cargando}
-          cargando={cargando}
-          estiloContenedor={estilos.boton}
-        />
-      </View>
-    );
-  };
-  
-  const estilos = StyleSheet.create({
-    contenedor: {
-      width: '100%',
-      //padding: Layout.spacing.medium  Removido padding aquí
-    },
-    boton: {
-      marginTop: Layout.spacing.large,
-    },
-  });
-  
-  export default FormularioRegistro;
+      {/* Botón de Registro */}
+      <Boton
+        titulo="Crear Cuenta"
+        onPress={manejarSubmit}
+        deshabilitado={cargando}
+        cargando={cargando}
+        estiloContenedor={estilos.boton}
+      />
+    </View>
+  );
+};
+
+const estilos = StyleSheet.create({
+  contenedor: {
+    width: '100%',
+  },
+  boton: {
+    marginTop: Layout.spacing.large,
+  },
+});
+
+export default FormularioRegistro;
