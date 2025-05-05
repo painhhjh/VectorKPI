@@ -1,20 +1,23 @@
-// Componente de formulario para el inicio de sesión.  hay que corregir
+// ReactNative/components/Auth/LoginForm.tsx
+
+// Componente de formulario para el inicio de sesión.
+// CORRECCIÓN: Simplifica el manejo de errores, confiando en el mensaje del servicio/contexto.
 
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet } from 'react-native'; // Removido Alert, usar MensajeError
 import { useAuth } from '../../contexts/useAuth';
-import CampoEntrada from '../Common/InputField';
+import CampoEntrada from '../Common/InputField'; // Renombrado a CampoEntrada consistentemente
 import Boton from '../Common/Button';
 import MensajeError from '../Common/ErrorMessage';
 import Layout from '../../constants/Layout';
 
 const FormularioLogin: React.FC = () => {
-  const { login, estado } = useAuth(); // Obtiene la función de login y el estado
-  const [email, setEmail] = useState<string>(''); // Estado para el campo email/usuario
-  const [password, setPassword] = useState<string>(''); // Estado para el campo contraseña
-  const [errorLocal, setErrorLocal] = useState<string | null>(null); // Estado para errores específicos del formulario
+  const { login, estado } = useAuth(); // Obtiene la función de login y el estado del contexto
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [errorLocal, setErrorLocal] = useState<string | null>(null); // Para errores específicos del formulario o de la API
 
-  // Determina si el formulario está en proceso de envío
+  // Determina si el formulario está en proceso de envío (usando el estado del contexto)
   const estaCargando = estado === 'cargando';
 
   // Manejador para el envío del formulario
@@ -25,21 +28,19 @@ const FormularioLogin: React.FC = () => {
       return;
     }
 
-    setErrorLocal(null); // Limpia errores previos
+    setErrorLocal(null); // Limpia errores previos antes de intentar
 
     try {
       // Llama a la función login del contexto
+      console.log('[LoginForm] Intentando login con:', email);
       await login({ email, password });
-      // La navegación ocurrirá automáticamente si el login es exitoso
-      // gracias a la lógica en app/_layout.tsx
-      console.log('[LoginForm] Llamada a login completada.');
+      // La navegación ocurre en el AuthContext si el login es exitoso
+      console.log('[LoginForm] Llamada a login del contexto completada (no indica éxito necesariamente aquí).');
 
     } catch (error: any) {
-      console.error('[LoginForm] Error en login:', error);
-      // Muestra el error devuelto por el contexto/API
+      console.error('[LoginForm] Error atrapado desde el contexto/servicio:', error);
+      // Muestra el error devuelto por el contexto/servicio (que ya debería estar formateado)
       setErrorLocal(error.message || 'Ocurrió un error al intentar iniciar sesión.');
-      // Podrías usar Alert aquí también si prefieres un popup
-      // Alert.alert('Error de Inicio de Sesión', error.message || 'Ocurrió un error');
     }
   };
 
@@ -57,8 +58,11 @@ const FormularioLogin: React.FC = () => {
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
-        textContentType="emailAddress" // Ayuda a autocompletar en iOS/Android
+        textContentType="emailAddress"
         editable={!estaCargando} // No editable mientras carga
+        // Añade returnKeyType para mejorar la experiencia del teclado
+        returnKeyType="next"
+        // onSubmitEditing podría mover el foco al siguiente campo si tienes la referencia
       />
 
       {/* Campo de Contraseña */}
@@ -69,8 +73,11 @@ const FormularioLogin: React.FC = () => {
         onChangeText={setPassword}
         secureTextEntry // Oculta la contraseña
         autoComplete="password"
-        textContentType="password" // Ayuda a autocompletar en iOS/Android
+        textContentType="password"
         editable={!estaCargando} // No editable mientras carga
+        // Permite enviar el formulario desde el teclado
+        returnKeyType="done"
+        onSubmitEditing={!estaCargando ? manejarSubmit : undefined}
       />
 
       {/* Botón de Inicio de Sesión */}
@@ -81,7 +88,6 @@ const FormularioLogin: React.FC = () => {
         cargando={estaCargando} // Muestra el spinner si está cargando
         estiloContenedor={estilos.boton}
       />
-       {/* Podrías añadir un enlace para "¿Olvidaste tu contraseña?" o "Registrarse" aquí */}
     </View>
   );
 };
@@ -89,7 +95,7 @@ const FormularioLogin: React.FC = () => {
 const estilos = StyleSheet.create({
   contenedor: {
     width: '100%', // Ocupa el ancho disponible
-    padding: Layout.spacing.medium, // Padding interno
+    // Removido padding aquí, usualmente se maneja en la pantalla contenedora
   },
   boton: {
     marginTop: Layout.spacing.medium, // Espacio sobre el botón

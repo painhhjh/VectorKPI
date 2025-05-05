@@ -1,4 +1,7 @@
-//Componente de formulario para el registro de nuevos usuarios.
+// ReactNative/components/Auth/RegisterForm.tsx
+
+// Componente de formulario para el registro de nuevos usuarios.
+// CORRECCIÓN: Simplifica manejo de errores y usa Alert para éxito.
 
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
@@ -20,64 +23,65 @@ const FormularioRegistro: React.FC = () => {
 
   // Manejador para el envío del formulario de registro
   const manejarSubmit = async () => {
+    // Resetear error al intentar de nuevo
+    setErrorLocal(null);
+
     // Validación básica de campos
     if (!email || !password || !confirmarPassword) {
       setErrorLocal('Por favor, completa todos los campos requeridos.');
       return;
     }
+    // Validación de formato de email (simple)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setErrorLocal('Por favor, ingresa un correo electrónico válido.');
       return;
     }
+    // Validación de coincidencia de contraseñas
     if (password !== confirmarPassword) {
       setErrorLocal('Las contraseñas no coinciden.');
       return;
     }
+    // Validación de longitud mínima de contraseña
     if (password.length < 8) {
       setErrorLocal('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
+    // Validación de complejidad (ejemplo: letra y número) - AJUSTA SEGÚN NECESITES
     if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setErrorLocal('La contraseña debe contener al menos una letra y un número.');
+      setErrorLocal('La contraseña debe contener letras y números.');
       return;
     }
 
-    setErrorLocal(null);
+    // Si pasa validaciones, procede a llamar al servicio
     setCargando(true);
 
     try {
       // --- Llamada REAL a la API ---
       const datosRegistro = {
           email,
-          password, // Envía la contraseña
-          nombre: nombre || undefined // Envía el nombre solo si no está vacío
+          password,
+          // Envía el nombre solo si el usuario lo ingresó
+          ...(nombre && { nombre: nombre })
       };
-      console.log('[RegisterForm] Enviando datos de registro a la API:', datosRegistro);
+      console.log('[RegisterForm] Enviando datos de registro:', datosRegistro.email);
 
       // Llama a la función del servicio de autenticación
       const respuesta = await registrarUsuario(datosRegistro);
 
       console.log('[RegisterForm] Registro exitoso:', respuesta);
+      // Muestra alerta de éxito y redirige al login al presionar OK
       Alert.alert(
         'Registro Exitoso',
-        respuesta.mensaje || 'Tu cuenta ha sido creada. Ahora puedes iniciar sesión.', // Usa mensaje de API si existe
-        [{ text: 'OK', onPress: () => router.push('/(auth)/login') }] // Redirige a login
+        respuesta.mensaje || 'Tu cuenta ha sido creada. Ahora puedes iniciar sesión.',
+        [{ text: 'OK', onPress: () => router.push('/(auth)/login') }]
       );
       // --- Fin Llamada API ---
 
     } catch (error: any) {
-      console.error('[RegisterForm] Error en registro API:', error);
-      // Muestra el error devuelto por el servicio/API o uno genérico
-      // Intenta obtener un mensaje más específico si la API devuelve detalles
-      let mensajeError = 'Ocurrió un error durante el registro.';
-      if (error?.response?.data?.detail) {
-          mensajeError = error.response.data.detail;
-      } else if (typeof error?.message === 'string') {
-          mensajeError = error.message;
-      }
-      setErrorLocal(mensajeError);
-      // Alert.alert('Error de Registro', mensajeError);
+      console.error('[RegisterForm] Error atrapado desde el servicio:', error);
+      // Muestra el error devuelto por el servicio (que ya debería estar formateado)
+      setErrorLocal(error.message || 'Ocurrió un error durante el registro.');
     } finally {
       setCargando(false); // Desactiva el indicador de carga
     }
@@ -85,6 +89,7 @@ const FormularioRegistro: React.FC = () => {
 
   return (
     <View style={estilos.contenedor}>
+      {/* Muestra el error local si existe */}
       {errorLocal && <MensajeError mensaje={errorLocal} />}
 
       {/* Campo de Nombre (Opcional) */}
@@ -96,6 +101,7 @@ const FormularioRegistro: React.FC = () => {
         autoCapitalize="words"
         autoComplete="name"
         editable={!cargando}
+        returnKeyType="next"
       />
 
       {/* Campo de Email */}
@@ -109,6 +115,7 @@ const FormularioRegistro: React.FC = () => {
         autoComplete="email"
         textContentType="emailAddress"
         editable={!cargando}
+        returnKeyType="next"
       />
 
       {/* Campo de Contraseña */}
@@ -118,9 +125,11 @@ const FormularioRegistro: React.FC = () => {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        // Evita sugerencias de contraseñas guardadas si es un registro nuevo
         autoComplete="password-new"
-        textContentType="newPassword"
+        textContentType="newPassword" // Ayuda a gestores de contraseñas
         editable={!cargando}
+        returnKeyType="next"
       />
 
       {/* Campo de Confirmar Contraseña */}
@@ -131,28 +140,30 @@ const FormularioRegistro: React.FC = () => {
         onChangeText={setConfirmarPassword}
         secureTextEntry
         editable={!cargando}
-      />
+        returnKeyType="done" // Último campo antes del botón
+        onSubmitEditing={!cargando ? manejarSubmit : undefined}
+        />
 
-      {/* Botón de Registro */}
-      <Boton
-        titulo="Crear Cuenta"
-        onPress={manejarSubmit}
-        deshabilitado={cargando}
-        cargando={cargando}
-        estiloContenedor={estilos.boton}
-      />
-    </View>
-  );
-};
-
-const estilos = StyleSheet.create({
-  contenedor: {
-    width: '100%',
-    padding: Layout.spacing.medium,
-  },
-  boton: {
-    marginTop: Layout.spacing.large,
-  },
-});
-
-export default FormularioRegistro;
+        {/* Botón de Registro */}
+        <Boton
+          titulo="Crear Cuenta"
+          onPress={manejarSubmit}
+          deshabilitado={cargando}
+          cargando={cargando}
+          estiloContenedor={estilos.boton}
+        />
+      </View>
+    );
+  };
+  
+  const estilos = StyleSheet.create({
+    contenedor: {
+      width: '100%',
+      //padding: Layout.spacing.medium  Removido padding aquí
+    },
+    boton: {
+      marginTop: Layout.spacing.large,
+    },
+  });
+  
+  export default FormularioRegistro;

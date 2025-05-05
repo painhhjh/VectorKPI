@@ -1,7 +1,5 @@
-/**
- * @file Componente reutilizable de botón.
- * @description Permite diferentes variantes (primario, secundario) y estado deshabilitado.
- */
+//Componente reutilizable de botón. Permite diferentes variantes (primario, secundario) y estado deshabilitado.
+
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
 import Colors from '../../constants/Colors';

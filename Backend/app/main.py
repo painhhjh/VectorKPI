@@ -30,7 +30,10 @@ allowed_origins = [
     "http://192.168.3.231",          # Loopback de localhost en red local
     "http://192.168.3.231:8081",     # Expo Go en la IP local
     "http://192.168.3.231:8000",     # Backend FastAPI en la IP local
-    "https://tu-dominio-frontend.com" # URL de producción del frontend (modificar según despliegue)
+    "https://tu-dominio-frontend.com", # URL de producción del frontend (modificar según despliegue)
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:8081", # localhost simple
+    "http://127.0.0.1:5432"
 ]
 
 # Filtrar orígenes vacíos o inválidos por seguridad
@@ -61,5 +64,5 @@ def read_root():
     return {"message": f"Bienvenido a {settings.PROJECT_NAME} API"}
 
 # Comando para ejecutar:
-# uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 # --host 0.0.0.0 permite conexiones desde otras máquinas en tu red local (útil para Expo Go)
