@@ -1,4 +1,5 @@
 // Pantalla principal del módulo de Inventario. Muestra lista de productos/categorías.
+// hay que agregar que la lista de categorías se renderiza detrás del modal de crear producto
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput } from 'react-native';
