@@ -6,9 +6,11 @@ import { Categoria, Producto, Transaccion, ListaProductosResponse } from '../typ
 // Obtiene todas las categorías
 export const obtenerCategorias = async (): Promise<Categoria[]> => {
   try {
+    // El backend devuelve List[CategoryRead], que es una lista directa
     const { data } = await get<Categoria[]>(ApiConstants.INVENTORY_CATEGORIES);
-    return data.map(normalizarCategoria);
+    return data.map(normalizarCategoria); // Mapeamos directamente sobre la lista
   } catch (error) {
+    console.error('[InventoryService] Error obteniendo categorías:', error); // Descomentar para depuración
     throw new Error(`Error obteniendo categorías: ${(error as Error).message}`);
   }
 };
@@ -19,6 +21,7 @@ export const obtenerCategoriaPorId = async (id: number): Promise<Categoria> => {
     const { data } = await get<Categoria>(url);
     return normalizarCategoria(data);
   } catch (error) {
+    console.error(`[InventoryService] Error obteniendo categoría ${id}:`, error); // Descomentar para depuración
     throw new Error(`Error obteniendo categoría ${id}: ${(error as Error).message}`);
   }
 };
@@ -27,7 +30,8 @@ export const obtenerCategoriaPorId = async (id: number): Promise<Categoria> => {
 export const crearCategoria = async (datos: Omit<Categoria, 'id'>): Promise<Categoria> => {
   try {
     const { data } = await post<Categoria>(ApiConstants.INVENTORY_CATEGORIES, datos);
-    return { ...data, created_at: data.created_at ? new Date(data.created_at).toISOString() : '' };
+    // Normalizamos la respuesta individual
+    return normalizarCategoria(data);
   } catch (error) {
     console.error('[InventoryService] Error creando categoría:', error);
     throw error;
@@ -35,23 +39,27 @@ export const crearCategoria = async (datos: Omit<Categoria, 'id'>): Promise<Cate
 };
 
 
-// Productos ======================================================================================
+// Productos
 
 export const obtenerProductos = async (
   categoriaId?: number,
   pagina: number = 1,
   porPagina: number = 20
-): Promise<ListaProductosResponse> => {
+): Promise<Producto[]> => { // Cambiado el tipo de retorno a Producto[]
   try {
     const params = {
       ...(categoriaId && { category_id: categoriaId }),
-      page: pagina,
-      per_page: porPagina
+      // El backend usa skip/limit, no page/per_page para productos según inventory.py
+      skip: (pagina - 1) * porPagina,
+      limit: porPagina
     };
-    
-    const { data } = await get<ListaProductosResponse>(ApiConstants.INVENTORY_PRODUCTS, params);
-    return normalizarProductos(data);
+
+    // El backend devuelve List[ProductRead], que es una lista directa
+    const { data } = await get<Producto[]>(ApiConstants.INVENTORY_PRODUCTS, params);
+    // Normalizamos la lista directamente
+    return normalizarListaProductos(data);
   } catch (error) {
+    console.error('[InventoryService] Error obteniendo productos:', error); // Descomentar para depuración
     throw new Error(`Error obteniendo productos: ${(error as Error).message}`);
   }
 };
@@ -62,6 +70,7 @@ export const obtenerDetalleProducto = async (id: number): Promise<Producto> => {
     const { data } = await get<Producto>(url);
     return normalizarProducto(data);
   } catch (error) {
+    console.error(`[InventoryService] Error obteniendo producto ${id}:`, error); // Descomentar para depuración
     throw new Error(`Error obteniendo producto ${id}: ${(error as Error).message}`);
   }
 };
@@ -100,7 +109,7 @@ export const eliminarProducto = async (id: number): Promise<void> => {
   }
 };
 
-// Transacciones ==================================================================================
+// Transacciones
 
 export const obtenerTransacciones = async (
   productoId?: number,
@@ -110,13 +119,15 @@ export const obtenerTransacciones = async (
   try {
     const params = {
       ...(productoId && { product_id: productoId }),
-      page: pagina,
-      per_page: porPagina
+      skip: (pagina - 1) * porPagina,
+      limit: porPagina
     };
 
+    // El backend devuelve List[TransactionRead], que es una lista directa
     const { data } = await get<Transaccion[]>(ApiConstants.INVENTORY_TRANSACTIONS, params);
-    return data.map(normalizarTransaccion);
+    return data.map(normalizarTransaccion); // Mapeamos directamente sobre la lista
   } catch (error) {
+    console.error('[InventoryService] Error obteniendo transacciones:', error); // Descomentar para depuración
     throw new Error(`Error obteniendo transacciones: ${(error as Error).message}`);
   }
 };
@@ -127,6 +138,7 @@ export const obtenerDetalleTransaccion = async (id: number): Promise<Transaccion
     const { data } = await get<Transaccion>(url);
     return normalizarTransaccion(data);
   } catch (error) {
+    console.error(`[InventoryService] Error obteniendo transacción ${id}:`, error); // Descomentar para depuración
     throw new Error(`Error obteniendo transacción ${id}: ${(error as Error).message}`);
   }
 };
@@ -141,7 +153,7 @@ export const crearTransaccion = async (datos: Omit<Transaccion, 'id'>): Promise<
   }
 };
 
-// Helpers de Normalización =======================================================================
+// Helpers de Normalización
 
 const normalizarCategoria = (categoria: Categoria): Categoria => ({
   ...categoria,
@@ -163,12 +175,14 @@ const normalizarTransaccion = (transaccion: Transaccion): Transaccion => ({
   product: transaccion.product ? normalizarProducto(transaccion.product) : undefined
 });
 
-const normalizarProductos = (respuesta: ListaProductosResponse): ListaProductosResponse => ({
-  ...respuesta,
-  results: respuesta.results.map(normalizarProducto)
-});
+const normalizarListaProductos = (listaProductos: Producto[]): Producto[] => {
+  // Si el backend ya devuelve objetos Producto correctos, solo mapeamos para normalizar fechas/números
+  return listaProductos.map(normalizarProducto);
+};
 
 const normalizarFecha = (fecha?: string | Date): string => {
   if (!fecha) return '';
-  return new Date(fecha).toISOString();
+  // Asegurarse de que la fecha sea un formato válido para el constructor de Date
+  const date = new Date(fecha);
+  return isNaN(date.getTime()) ? '' : date.toISOString();
 };

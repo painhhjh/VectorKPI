@@ -39,6 +39,7 @@ app-example
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
 
 # Entornos virtuales
 venv/
@@ -46,3 +47,4 @@ venv/
 
 cambios.txt
 peticion.txt
+archivos.txt

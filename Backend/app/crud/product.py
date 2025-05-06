@@ -20,10 +20,19 @@ def get_products(
         query = query.filter(Product.category_id == category_id)
     return query.offset(skip).limit(limit).all()
 
-def create_product(db: Session, product_in: ProductCreate) -> Product:
-    db_product = Product(**product_in.model_dump())
+def create_product(db: Session, *, product_in: ProductCreate, owner_id: int) -> Product:
+    """
+    Crea un nuevo producto en la base de datos.
+    """
+    # Crea un diccionario con los datos del schema Asegúrate de que los nombres de campo coincidan con tu modelo SQLAlchemy
+    db_product_data = product_in.dict()
+    # Crea la instancia del modelo SQLAlchemy
+    db_product = Product(**db_product_data, owner_id=owner_id) # Asigna el owner_id si es necesario
+
+    # Añade a la sesión y guarda en la BD
     db.add(db_product)
     db.commit()
+    # Refresca para obtener el ID asignado por la BD
     db.refresh(db_product)
     return db_product
 
