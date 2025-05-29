@@ -60,3 +60,4 @@ si les da algún error, ejecuten
 Para aprender más sobre cómo desarrollar tu proyecto con Expo, consulta los siguientes recursos:
 - [Documentación de Expo](https://docs.expo.dev/): Aprende los fundamentos o profundiza en temas avanzados con nuestras [guías](https://docs.expo.dev/guides).
 - [Tutorial de aprendizaje de Expo](https://docs.expo.dev/tutorial/introduction/): Sigue un tutorial paso a paso donde crearás un proyecto que funciona en Android, iOS y la web.
+- [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/painhhjh/VectorKPI)
