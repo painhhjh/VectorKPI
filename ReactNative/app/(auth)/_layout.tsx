@@ -16,7 +16,7 @@ export default function AuthLayout() {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-        headerBackTitleVisible: false, // Oculta el texto junto al botón de atrás en iOS
+        headerBackTitle: '', // Oculta el texto junto al botón de atrás en iOS
       }}
     >
       {/* Pantalla de Login */}

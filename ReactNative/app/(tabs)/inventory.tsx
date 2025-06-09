@@ -288,7 +288,7 @@ export default function PantallaInventario() {
           <View style={estilos.modalContenidoCategoria}>
             <Text style={estilos.modalTitulo}>Seleccionar Categoría</Text>
 
-            {/* MODIFIED: Enhanced content display for category modal */}
+            {/* MODIFICADO: Contenido mejorado para el modal de categorías */}
             {estadoCargaCat === 'error' ? (
               <Text style={estilos.textoModalInformativo}>Error al cargar categorías.</Text>
             ) : categorias.length === 0 ? (
@@ -315,6 +315,8 @@ export default function PantallaInventario() {
                 )}
               />
             )}
+
+            
 
             {/* Botón para cerrar el modal de categorías */}
             <TouchableOpacity

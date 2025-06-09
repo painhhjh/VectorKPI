@@ -9,9 +9,10 @@ import KpiList from '../../components/KPI/KpiList';
 import IndicadorCarga from '../../components/Common/LoadingIndicator';
 import MensajeError from '../../components/Common/ErrorMessage';
 import { obtenerKpis } from '../../services/kpiService';
-import { KpiListResponse, KPI } from '../../types';
-import Layout from '../../constants/Layout';
+import { KpiListResponse, KPI, KpiTrend } from '../../types';
+import { KpiCategory } from '../../types/kpi'; // Usa la importación nombrada para KpiCategory
 import Color from '../../constants/Colors';
+import { Button, Modal, TextInput, TouchableOpacity } from 'react-native';
 
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
 
@@ -20,82 +21,89 @@ export default function PantallaDashboard() {
   const [estadoCarga, setEstadoCarga] = useState<EstadoCarga>('idle');
   const [error, setError] = useState<string | null>(null);
   const [refrescando, setRefrescando] = useState<boolean>(false);
-  // Podrías añadir estado para paginación si tu API lo soporta
-  // const [paginaActual, setPaginaActual] = useState<number>(1);
-  // const [tieneMasPaginas, setTieneMasPaginas] = useState<boolean>(true);
+
+  // Estado para el modal de creación de KPI
+  const [modalVisible, setModalVisible] = useState(false);
+  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [nuevoValor, setNuevoValor] = useState('');
+  const [creando, setCreando] = useState(false);
+  const [errorCrear, setErrorCrear] = useState<string | null>(null);
 
   // Función para cargar los KPIs desde la API
   const cargarKpis = useCallback(async (esRefresco = false) => {
+    // ...igual que antes...
     console.log(`[Dashboard] Cargando KPIs... ${esRefresco ? '(Refresco)' : ''}`);
-    // Si no es refresco, muestra el indicador de carga principal
     if (!esRefresco) {
       setEstadoCarga('cargando');
     }
-    setError(null); // Limpia errores previos
-
+    setError(null);
     try {
-      const respuesta: KpiListResponse = await obtenerKpis(/* Aquí podrías pasar filtros */);
-      setKpis(respuesta.results); // Actualiza la lista de KPIs
+      const respuesta: KpiListResponse = await obtenerKpis();
+      setKpis(respuesta.results);
       setEstadoCarga('exito');
       console.log('[Dashboard] KPIs cargados exitosamente.');
-      // Actualiza estado de paginación si es necesario
       // setTieneMasPaginas(!!respuesta.next);
     } catch (err: any) {
       console.error('[Dashboard] Error al cargar KPIs:', err);
       setError(err.message || 'No se pudieron cargar los indicadores.');
       setEstadoCarga('error');
-      setKpis([]); // Limpia KPIs en caso de error
+      setKpis([]);
     } finally {
-      // Si era un refresco, indica que terminó
-      if (esRefresco) {
-        setRefrescando(false);
-      }
-      // Si no era refresco y no hubo éxito, podría quedarse en 'cargando' o ir a 'error'
-      if (!esRefresco && estadoCarga !== 'exito') {
-         // El estado ya se actualizó a 'error' en el catch
-      } else if (!esRefresco) {
-         // Si fue exitoso, ya está en 'exito'
-      }
-
+      if (esRefresco) setRefrescando(false);
     }
-  }, [estadoCarga]); // Dependencia para evitar re-creación innecesaria si no cambia estadoCarga
+  }, [estadoCarga]);
 
-  // Carga los datos cuando la pantalla obtiene el foco
   useFocusEffect(
     useCallback(() => {
-      // Carga inicial solo si no se ha cargado antes o si hubo error
       if (estadoCarga === 'idle' || estadoCarga === 'error') {
         cargarKpis();
       }
-      // Podrías añadir lógica para recargar siempre si lo necesitas:
-      // cargarKpis();
-
-      // Función de limpieza opcional (no necesaria aquí generalmente)
       return () => {
         console.log('[Dashboard] Pantalla perdió el foco.');
       };
-    }, [cargarKpis, estadoCarga]) // Depende de cargarKpis y estadoCarga
+    }, [cargarKpis, estadoCarga])
   );
 
   // Manejador para el "pull-to-refresh"
   const handleRefrescar = useCallback(() => {
-    setRefrescando(true); // Activa el indicador de refresco
-    // setPaginaActual(1); // Reinicia paginación si aplica
-    cargarKpis(true); // Llama a cargarKpis indicando que es un refresco
-  }, [cargarKpis]); // Depende de cargarKpis
+    setRefrescando(true);
+    cargarKpis(true);
+  }, [cargarKpis]);
 
-  // Manejador para cargar más al llegar al final (paginación)
   const handleEndReached = () => {
-    console.log('[Dashboard] Fin de lista alcanzado.');
-    // Lógica de paginación (si aplica y hay más páginas)
-    // if (!cargando && tieneMasPaginas) {
-    //   console.log('[Dashboard] Cargando siguiente página...');
-    //   setPaginaActual(prev => prev + 1);
-    //   cargarKpis(false, paginaActual + 1); // Necesitarías modificar cargarKpis para aceptar página
-    // }
+    // Paginación futura
   };
 
-  // Renderizado condicional basado en el estado de carga
+  // Crear KPI
+  const handleCrearKpi = async () => {
+    setCreando(true);
+    setErrorCrear(null);
+    try {
+      // Importa la función aquí para evitar problemas de importación circular
+      const { crearKpi } = await import('../../services/kpiService');
+      await crearKpi({
+        name: nuevoNombre,
+        value: Number(nuevoValor),
+        unit: '', // Ajusta según tu lógica de negocio
+        trend: 'stable', // Usa el valor del enum KpiTrend
+        category: 'seguridad', // Usa el valor del enum KpiCategory o el que corresponda
+        lastUpdated: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        description: '', // Opcional, puedes permitir editarlo en el modal si lo deseas
+        target: undefined, // Opcional, puedes permitir editarlo en el modal si lo deseas
+        progreso: undefined, // Opcional, puedes permitir editarlo en el modal si lo deseas
+      });
+      setModalVisible(false);
+      setNuevoNombre('');
+      setNuevoValor('');
+      cargarKpis();
+    } catch (err: any) {
+      setErrorCrear(err.message || 'Error al crear KPI');
+    } finally {
+      setCreando(false);
+    }
+  };
+
   const renderizarContenido = () => {
     if (estadoCarga === 'cargando' && kpis.length === 0 && !refrescando) {
       // Muestra indicador grande solo en la carga inicial
@@ -120,8 +128,100 @@ export default function PantallaDashboard() {
 
   return (
     <View style={estilos.contenedor}>
+      {/* Botón para abrir el modal */}
+      <TouchableOpacity
+        style={{
+          backgroundColor: Color.primary,
+          padding: 12,
+          borderRadius: 8,
+          margin: 16,
+          alignItems: 'center',
+        }}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Crear KPI</Text>
+      </TouchableOpacity>
+
       {renderizarContenido()}
-      {/* Podrías añadir aquí botones para filtros, etc. */}
+
+      {/* Modal de creación de KPI */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <View style={{
+            backgroundColor: '#fff',
+            padding: 24,
+            borderRadius: 12,
+            width: '85%',
+            elevation: 4,
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Nuevo KPI</Text>
+            <TextInput
+              placeholder="Nombre"
+              value={nuevoNombre}
+              onChangeText={setNuevoNombre}
+              style={{
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 6,
+                padding: 8,
+                marginBottom: 12,
+              }}
+              editable={!creando}
+            />
+            <TextInput
+              placeholder="Valor"
+              value={nuevoValor}
+              onChangeText={setNuevoValor}
+              keyboardType="numeric"
+              style={{
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 6,
+                padding: 8,
+                marginBottom: 12,
+              }}
+              editable={!creando}
+            />
+            {errorCrear ? (
+              <Text style={{ color: 'red', marginBottom: 8 }}>{errorCrear}</Text>
+            ) : null}
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                disabled={creando}
+                style={{ marginRight: 16 }}
+              >
+                <Text style={{ color: Color.primary }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleCrearKpi}
+                disabled={creando || !nuevoNombre || !nuevoValor}
+                style={{
+                  backgroundColor: Color.primary,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 6,
+                  opacity: creando || !nuevoNombre || !nuevoValor ? 0.6 : 1,
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                  {creando ? 'Creando...' : 'Crear'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
