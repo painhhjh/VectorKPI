@@ -8,11 +8,13 @@ import { useFocusEffect } from 'expo-router'; // Para recargar al enfocar la pes
 import KpiList from '../../components/KPI/KpiList';
 import IndicadorCarga from '../../components/Common/LoadingIndicator';
 import MensajeError from '../../components/Common/ErrorMessage';
-import { obtenerKpis } from '../../services/kpiService';
+import { obtenerKpis, obtenerKpisDebug } from '../../services/kpiService';
 import { KpiListResponse, KPI, KpiTrend } from '../../types';
 import { KpiCategory } from '../../types/kpi'; // Usa la importación nombrada para KpiCategory
 import Color from '../../constants/Colors';
 import { Button, Modal, TextInput, TouchableOpacity } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+
 
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
 
@@ -29,6 +31,33 @@ export default function PantallaDashboard() {
   const [creando, setCreando] = useState(false);
   const [errorCrear, setErrorCrear] = useState<string | null>(null);
 
+  const [unit, setUnit] = useState('');
+  const [description, setDescription] = useState('');
+  const [target, setTarget] = useState('');
+  const [category, setCategory] = useState<KpiCategory>('seguridad');
+  const [trend, setTrend] = useState<KpiTrend>('stable');
+
+  
+
+
+const filtrarKpisRecientes = (kpis: KPI[]) => {
+  const kpisUnicos = new Map<string, KPI>();
+  
+  // Sort by last_updated descending first to ensure newest come first
+  const sortedKpis = [...kpis].sort((a, b) => 
+    new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime()
+  );
+
+  sortedKpis.forEach(kpi => {
+    if (!kpisUnicos.has(kpi.name)) {
+      kpisUnicos.set(kpi.name, kpi);
+    }
+  });
+  
+  return Array.from(kpisUnicos.values());
+};
+
+
   // Función para cargar los KPIs desde la API
   const cargarKpis = useCallback(async (esRefresco = false) => {
     // ...igual que antes...
@@ -39,7 +68,15 @@ export default function PantallaDashboard() {
     setError(null);
     try {
       const respuesta: KpiListResponse = await obtenerKpis();
-      setKpis(respuesta.results);
+
+      console.log(respuesta)
+      const kpisRecientes = filtrarKpisRecientes(respuesta.results);
+      // console.log('KPIs filtrados:', respuesta.results.map(k => ({
+      //   name: k.name,
+      //   last_updated: k.last_updated,
+      //   value: k.value
+      // })));
+      setKpis(kpisRecientes);
       setEstadoCarga('exito');
       console.log('[Dashboard] KPIs cargados exitosamente.');
       // setTieneMasPaginas(!!respuesta.next);
@@ -74,35 +111,39 @@ export default function PantallaDashboard() {
     // Paginación futura
   };
 
-  // Crear KPI
-  const handleCrearKpi = async () => {
-    setCreando(true);
-    setErrorCrear(null);
-    try {
-      // Importa la función aquí para evitar problemas de importación circular
-      const { crearKpi } = await import('../../services/kpiService');
-      await crearKpi({
-        name: nuevoNombre,
-        value: Number(nuevoValor),
-        unit: '', // Ajusta según tu lógica de negocio
-        trend: 'stable', // Usa el valor del enum KpiTrend
-        category: 'seguridad', // Usa el valor del enum KpiCategory o el que corresponda
-        lastUpdated: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        description: '', // Opcional, puedes permitir editarlo en el modal si lo deseas
-        target: undefined, // Opcional, puedes permitir editarlo en el modal si lo deseas
-        progreso: undefined, // Opcional, puedes permitir editarlo en el modal si lo deseas
-      });
-      setModalVisible(false);
-      setNuevoNombre('');
-      setNuevoValor('');
-      cargarKpis();
-    } catch (err: any) {
-      setErrorCrear(err.message || 'Error al crear KPI');
-    } finally {
-      setCreando(false);
-    }
-  };
+const handleCrearKpi = async () => {
+  setCreando(true);
+  setErrorCrear(null);
+  try {
+    const { crearKpi } = await import('../../services/kpiService');
+    await crearKpi({
+      name: nuevoNombre,
+      value: Number(nuevoValor),
+      unit: unit,
+      trend: trend,
+      category: category,
+      last_updated: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      description: description,
+      target: target ? Number(target) : undefined,
+      progreso: undefined // Calculated automatically
+    });
+    setModalVisible(false);
+    // Reset all fields
+    setNuevoNombre('');
+    setNuevoValor('');
+    setUnit('');
+    setDescription('');
+    setTarget('');
+    setCategory('seguridad');
+    setTrend('stable');
+    cargarKpis();
+  } catch (err: any) {
+    setErrorCrear(err.message || 'Error al crear KPI');
+  } finally {
+    setCreando(false);
+  }
+};
 
   const renderizarContenido = () => {
     if (estadoCarga === 'cargando' && kpis.length === 0 && !refrescando) {
@@ -145,83 +186,129 @@ export default function PantallaDashboard() {
       {renderizarContenido()}
 
       {/* Modal de creación de KPI */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setModalVisible(false)}
+
+<Modal
+  visible={modalVisible}
+  animationType='slide'
+  transparent
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={{
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}>
+    <View style={{
+      backgroundColor: '#fff',
+      padding: 24,
+      borderRadius: 12,
+      width: '85%',
+      elevation: 4,
+    }}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Nuevo KPI</Text>
+      
+      {/* Name Field */}
+      <TextInput
+        placeholder='Nombre del KPI'
+        value={nuevoNombre}
+        onChangeText={setNuevoNombre}
+        style={estilos.modalInput}
+      />
+      
+      {/* Value Field */}
+      <TextInput
+        placeholder="Valor"
+        value={nuevoValor}
+        onChangeText={setNuevoValor}
+        keyboardType="numeric"
+        style={estilos.modalInput}
+      />
+      
+      {/* Unit Field */}
+      <TextInput
+        placeholder="Unidad (ej. %, bbl/día)"
+        value={unit}
+        onChangeText={setUnit}
+        style={estilos.modalInput}
+      />
+      
+      {/* Description Field */}
+      <TextInput
+        placeholder="Descripción"
+        value={description}
+        onChangeText={setDescription}
+        multiline
+        numberOfLines={3}
+        style={[estilos.modalInput, { height: 80 }]}
+      />
+      
+      {/* Target Field */}
+      <TextInput
+        placeholder="Objetivo (opcional)"
+        value={target}
+        onChangeText={setTarget}
+        keyboardType="numeric"
+        style={estilos.modalInput}
+      />
+      
+      {/* Category Picker */}
+      <Text style={estilos.modalLabel}>Categoría</Text>
+      <Picker
+        selectedValue={category}
+        onValueChange={setCategory}
+        style={estilos.modalInput}
       >
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.3)',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-          <View style={{
-            backgroundColor: '#fff',
-            padding: 24,
-            borderRadius: 12,
-            width: '85%',
-            elevation: 4,
-          }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Nuevo KPI</Text>
-            <TextInput
-              placeholder="Nombre"
-              value={nuevoNombre}
-              onChangeText={setNuevoNombre}
-              style={{
-                borderWidth: 1,
-                borderColor: '#ccc',
-                borderRadius: 6,
-                padding: 8,
-                marginBottom: 12,
-              }}
-              editable={!creando}
-            />
-            <TextInput
-              placeholder="Valor"
-              value={nuevoValor}
-              onChangeText={setNuevoValor}
-              keyboardType="numeric"
-              style={{
-                borderWidth: 1,
-                borderColor: '#ccc',
-                borderRadius: 6,
-                padding: 8,
-                marginBottom: 12,
-              }}
-              editable={!creando}
-            />
-            {errorCrear ? (
-              <Text style={{ color: 'red', marginBottom: 8 }}>{errorCrear}</Text>
-            ) : null}
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                disabled={creando}
-                style={{ marginRight: 16 }}
-              >
-                <Text style={{ color: Color.primary }}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleCrearKpi}
-                disabled={creando || !nuevoNombre || !nuevoValor}
-                style={{
-                  backgroundColor: Color.primary,
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 6,
-                  opacity: creando || !nuevoNombre || !nuevoValor ? 0.6 : 1,
-                }}
-              >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-                  {creando ? 'Creando...' : 'Crear'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        <Picker.Item label="Perforación" value="perforación" />
+        <Picker.Item label="Producción" value="producción" />
+        <Picker.Item label="Logística" value="logística" />
+        <Picker.Item label="Seguridad" value="seguridad" />
+        <Picker.Item label="Financiero" value="financiero" />
+      </Picker>
+      
+      {/* Trend Picker */}
+      <Text style={estilos.modalLabel}>Tendencia</Text>
+      <Picker
+        selectedValue={trend}
+        onValueChange={setTrend}
+        style={estilos.modalInput}
+      >
+        <Picker.Item label="↑ Ascendente" value="up" />
+        <Picker.Item label="↓ Descendente" value="down" />
+        <Picker.Item label="→ Estable" value="stable" />
+      </Picker>
+      
+      {errorCrear && (
+        <Text style={{color: 'red', marginBottom: 8}}>{errorCrear}</Text>
+      )}
+      
+      <View style={{flexDirection: 'row', justifyContent: 'flex-end'}}>
+        <TouchableOpacity
+          onPress={() => setModalVisible(false)}
+          disabled={creando}
+          style={{ marginRight: 16 }}
+        >
+          <Text style={{ color: Color.primary }}>Cancelar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleCrearKpi}
+          disabled={creando || !nuevoNombre || !nuevoValor || !unit}
+          style={{
+            backgroundColor: Color.primary,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            borderRadius: 6,
+            opacity: (creando || !nuevoNombre || !nuevoValor || !unit) ? 0.6 : 1,
+          }}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+            {creando ? 'Creando...' : 'Crear'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
     </View>
   );
 }
@@ -232,4 +319,18 @@ const estilos = StyleSheet.create({
     backgroundColor: Color.background, // Fondo general
   },
   // Otros estilos si son necesarios
+
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  modalLabel: {
+    fontSize: 14,
+    color: Color.textSecondary,
+    marginBottom: 4,
+  },
 });

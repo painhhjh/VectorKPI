@@ -1,6 +1,6 @@
 //muestra un resumen de un KPI en una tarjeta. Muestra nombre, valor, unidad, objetivo y tendencia. 
 // Es presionable para navegar al detalle.
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,10 +9,37 @@ import { KPI, KpiTrend } from '../../types';
 import Colors from '../../constants/Colors';
 import Layout from '../../constants/Layout';
 
+import { KpiEditModal } from './KpiEditModal';
+import { actualizarKpiVersion } from '../../services/kpiService';
+
+
+
+
 // Propiedades que recibe el componente
 interface KpiCardProps {
   kpi: KPI; // Los datos del KPI a mostrar
+  onUpdate?: () => void;
 }
+
+
+
+
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return 'No actualizado';
+  
+  const date = new Date(dateString);
+  // Check if the date is valid
+  if (isNaN(date.getTime())) return 'Fecha inválida';
+  
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
 // Función helper para obtener el icono y color de la tendencia
 const obtenerInfoTendencia = (tendencia: KpiTrend): { icono: React.ComponentProps<typeof Ionicons>['name']; color: string } => {
@@ -27,9 +54,14 @@ const obtenerInfoTendencia = (tendencia: KpiTrend): { icono: React.ComponentProp
   }
 };
 
-const KpiCard: React.FC<KpiCardProps> = ({ kpi }) => {
+const KpiCard: React.FC<KpiCardProps> = ({ kpi, onUpdate}) => {
   const router = useRouter();
   const { icono: iconoTendencia, color: colorTendencia } = obtenerInfoTendencia(kpi.trend);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+
+  const handleEdit = () => {
+    setEditModalVisible(true);
+  };
 
   // Navega a la pantalla de detalle pasando el ID del KPI
   const navegarADetalle = () => {
@@ -39,16 +71,57 @@ const KpiCard: React.FC<KpiCardProps> = ({ kpi }) => {
         pathname: '/(tabs)/kpi-detail',
         params: { id: kpi.id }
     });
+
+
+
   };
+
+   const handleEditSubmit = async (values: {
+    value: number;
+    unit: string;
+    trend: KpiTrend;
+    description: string;
+  }) => {
+    try {
+      await actualizarKpiVersion(kpi, values);
+      if (onUpdate) onUpdate(); // Refresh parent component if callback provided
+      setEditModalVisible(false);
+    } catch (error) {
+      console.error('Error updating KPI:', error);
+    }
+  };
+
+
+
 
   return (
     <TouchableOpacity onPress={navegarADetalle} activeOpacity={0.8}> {/* Hace la tarjeta presionable */}
-      <Tarjeta estiloContenedor={estilos.tarjetaContenedor}> {/* Componente base de tarjeta */}
+    
+
+      <Tarjeta estiloContenedor={estilos.tarjetaContenedor}> {/* Componente base de tarjeta */}        
+
         <View style={estilos.filaSuperior}> {/* Contenedor para el nombre y tendencia */}
+
           <Text style={estilos.nombreKpi} numberOfLines={2}>{kpi.name}</Text> {/* Nombre del KPI */}
+
+                  {/*double check*/}
+          <TouchableOpacity 
+            onPress={(e) => {
+            e.stopPropagation(); 
+            handleEdit(); 
+          }}          
+            style={estilos.botonEditar}
+          >
+          <Ionicons name="pencil" size={20} color={Colors.primary} />
+          </TouchableOpacity>
+
           <Ionicons name={iconoTendencia} size={28} color={colorTendencia} /> {/* Icono de tendencia */}
+
         </View>
         <View style={estilos.filaInferior}> {/* Contenedor para valor y objetivo */}
+
+
+
           <Text style={estilos.valorKpi}>
             {kpi.value.toLocaleString()} {/* Formatea el valor del KPI */}
             <Text style={estilos.unidadKpi}> {kpi.unit}</Text> {/* Unidad del KPI */}
@@ -60,9 +133,18 @@ const KpiCard: React.FC<KpiCardProps> = ({ kpi }) => {
           )}
         </View>
          <Text style={estilos.categoria}>Categoría: {kpi.category}</Text> {/* Categoría del KPI */}
-         <Text style={estilos.fechaActualizacion}>Actualizado: {new Date(kpi.lastUpdated).toLocaleDateString()}</Text> {/* Fecha de actualización */}
+         <Text style={estilos.fechaActualizacion}> Actualizado: {formatDate(kpi.last_updated)}</Text> {/* Fecha de actualización */}
+      
+        <KpiEditModal
+          visible={editModalVisible}
+          kpi={kpi}
+          onCancel={() => setEditModalVisible(false)}
+          onSubmit={handleEditSubmit}
+        />      
+      
       </Tarjeta>
     </TouchableOpacity>
+    
   );
 };
 
@@ -73,7 +155,7 @@ const estilos = StyleSheet.create({
   filaSuperior: {
     flexDirection: 'row', // Organiza los elementos en fila
     justifyContent: 'space-between', // Espacia los elementos al máximo
-    alignItems: 'flex-start', // Alinea los elementos al inicio verticalmente
+    alignItems: 'center', // Alinea los elementos al inicio verticalmente
     marginBottom: Layout.spacing.medium, // Espaciado inferior
   },
   nombreKpi: {
@@ -83,6 +165,12 @@ const estilos = StyleSheet.create({
     flex: 1, // Ocupa el espacio disponible
     marginRight: Layout.spacing.small, // Espaciado derecho antes del icono
   },
+
+  botonEditar: {
+    marginRight: Layout.spacing.small, // Space between pencil and trend icon
+    padding: 4, // Makes the touch area nicer
+  },
+
   filaInferior: {
     flexDirection: 'row', // Organiza los elementos en fila
     justifyContent: 'space-between', // Espacia los elementos al máximo

@@ -112,7 +112,7 @@ export default function PantallaDetalleKpi() {
 
         <Text style={estilos.infoAdicional}>Categoría: {kpi.category}</Text>
         <Text style={estilos.infoAdicional}>Tendencia: {kpi.trend}</Text>
-        <Text style={estilos.infoAdicional}>Última Actualización: {new Date(kpi.lastUpdated).toLocaleString()}</Text>
+        <Text style={estilos.infoAdicional}>Última Actualización: {new Date(kpi.last_updated).toLocaleString()}</Text>
       </View>
 
       {/* Renderiza el gráfico con los datos */}

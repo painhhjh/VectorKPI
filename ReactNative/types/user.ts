@@ -5,6 +5,6 @@ export interface Usuario {
   email: string; // Correo electrónico del usuario
   nombre?: string; // Nombre del usuario (opcional)
   isActive: boolean; // Indica si el usuario está activo
-  createdAt: Date; // Fecha de creación del usuario
+  created_at: Date; // Fecha de creación del usuario
   updatedAt?: Date; // Fecha de última actualización del usuario (opcional)
 }

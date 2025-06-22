@@ -16,8 +16,8 @@ export interface KPI {
   unit: string; // La unidad de medición (por ejemplo, "%", "bbl/día", "USD/bbl", "días")
   trend: KpiTrend; // La tendencia reciente del valor del KPI
   category: KpiCategory; // Categoría a la que pertenece el KPI
-  lastUpdated: string; // Cadena de fecha ISO 8601 de la última actualización
-  createdAt: string; // Cadena de fecha ISO 8601 de su creación
+  last_updated: string; // Cadena de fecha ISO 8601 de la última actualización
+  created_at: string; // Cadena de fecha ISO 8601 de su creación
   progreso?: number;
 }
 
