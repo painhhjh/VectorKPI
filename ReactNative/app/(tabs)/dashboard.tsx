@@ -4,7 +4,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import { useFocusEffect } from 'expo-router'; // Para recargar al enfocar la pestaña
+import { router, useFocusEffect } from 'expo-router'; // Para recargar al enfocar la pestaña
 import KpiList from '../../components/KPI/KpiList';
 import IndicadorCarga from '../../components/Common/LoadingIndicator';
 import MensajeError from '../../components/Common/ErrorMessage';
@@ -14,6 +14,8 @@ import { KpiCategory } from '../../types/kpi'; // Usa la importación nombrada p
 import Color from '../../constants/Colors';
 import { Button, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import Boton from '@/components/Common/Button';
+import Layout from '@/constants/Layout';
 
 
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
@@ -36,7 +38,7 @@ export default function PantallaDashboard() {
   const [target, setTarget] = useState('');
   const [category, setCategory] = useState<KpiCategory>('seguridad');
   const [trend, setTrend] = useState<KpiTrend>('stable');
-
+  const [selectedCategory, setSelectedCategory] = useState<KpiCategory>('seguridad');
   
 
 
@@ -145,6 +147,47 @@ const handleCrearKpi = async () => {
   }
 };
 
+const categoryFilterSection = (
+ <View style={estilos.filterContainer}>
+  {/* Category Dropdown */}
+  <View style={estilos.pickerWrapper}>
+    <Picker
+      selectedValue={selectedCategory}
+      onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+      style={estilos.picker}
+      dropdownIconColor={Color.primary}
+      mode="dropdown"
+    >
+      {Object.entries({
+        'perforación': 'Perforación',
+        'producción': 'Producción',
+        'logística': 'Logística',
+        'seguridad': 'Seguridad',
+        'financiero': 'Financiero'
+      }).map(([value, label]) => (
+        <Picker.Item 
+          key={value} 
+          label={label} 
+          value={value} 
+          style={estilos.pickerItem}
+        />
+      ))}
+    </Picker>
+  </View>
+
+  {/* Filter Button */}
+  <Boton 
+    titulo="Ver Categoría"
+    onPress={() => router.push({
+      pathname: '/(tabs)/category-detail',
+      params: { category: selectedCategory }
+    })}
+    estiloContenedor={estilos.filterButton}
+  />
+</View>
+);
+
+
   const renderizarContenido = () => {
     if (estadoCarga === 'cargando' && kpis.length === 0 && !refrescando) {
       // Muestra indicador grande solo en la carga inicial
@@ -182,6 +225,10 @@ const handleCrearKpi = async () => {
       >
         <Text style={{ color: '#fff', fontWeight: 'bold' }}>Crear KPI</Text>
       </TouchableOpacity>
+
+
+        
+      {categoryFilterSection}
 
       {renderizarContenido()}
 
@@ -320,17 +367,65 @@ const estilos = StyleSheet.create({
   },
   // Otros estilos si son necesarios
 
-  modalInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 12,
-    backgroundColor: '#fff',
-  },
-  modalLabel: {
-    fontSize: 14,
-    color: Color.textSecondary,
-    marginBottom: 4,
-  },
+    modalInput: {
+      borderWidth: 1,
+      borderColor: '#ccc',
+      borderRadius: 6,
+      padding: 8,
+      marginBottom: 12,
+      backgroundColor: '#fff',
+    },
+    modalLabel: {
+      fontSize: 14,
+      color: Color.textSecondary,
+      marginBottom: 4,
+    },
+
+  //   filterContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   marginBottom: Layout.spacing.medium,
+  //   paddingHorizontal: Layout.spacing.small,
+  // },
+  // picker: {
+  //   flex: 1,
+  //   backgroundColor: Color.white,
+  //   marginRight: Layout.spacing.small,
+  // },
+  // filterButton: {
+  //   width: 120,
+  // },
+
+  filterContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: Layout.spacing.medium,
+  paddingHorizontal: Layout.spacing.small,
+},
+pickerWrapper: {
+  flex: 1,
+  borderWidth: 1,
+  borderColor: Color.border,
+  borderRadius: Layout.borderRadius.medium,
+  backgroundColor: Color.white,
+  marginRight: Layout.spacing.small,
+  height: 48, // Match button height
+  justifyContent: 'center',
+  overflow: 'hidden', // Keeps border radius on Android
+},
+picker: {
+  width: '100%',
+  height: '100%',
+  color: Color.text,
+  // Android padding fixes
+
+},
+pickerItem: {
+  fontSize: Layout.fontSize.body,
+  color: Color.text,
+},
+filterButton: {
+  width: 120,
+},
+
 });

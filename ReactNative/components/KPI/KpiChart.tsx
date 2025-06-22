@@ -13,81 +13,172 @@ interface KpiChartProps {
 }
 
 const KpiChart: React.FC<KpiChartProps> = ({ datos, nombreKpi, unidad }) => {
-  // Validación inicial de datos (sin cambios)
-  if (!datos || datos.length < 2) {
+  // If no data or only one point, show message
+  if (!datos || datos.length <= 1) {
     return (
       <View style={estilos.contenedorPlaceholder}>
         <Text style={estilos.textoPlaceholder}>
-          Datos históricos insuficientes para mostrar el gráfico de {nombreKpi}.
+          {datos.length === 1 
+            ? `Solo hay un dato registrado para ${nombreKpi}`
+            : `No hay suficientes datos históricos para ${nombreKpi}`}
         </Text>
       </View>
     );
   }
 
-  // Preparación de etiquetas y valores (misma lógica original)
-  const etiquetasGrafico: string[] = [];
-  const valoresGrafico: number[] = [];
-  const numeroMaximoEtiquetas = 6;
-  const pasoEtiqueta = Math.max(1, Math.ceil(datos.length / numeroMaximoEtiquetas));
-
-  datos.forEach((punto, index) => {
-    // Agrega una etiqueta cada 'pasoEtiqueta' elementos o en el último elemento
-    if (index % pasoEtiqueta === 0 || index === datos.length - 1) {
-      etiquetasGrafico.push(`${punto.fecha.getDate()}/${punto.fecha.getMonth() + 1}`); // Formatea la fecha como día/mes
-    } else {
-      etiquetasGrafico.push(''); // Deja la etiqueta vacía para mantener el espacio
-    }
-    valoresGrafico.push(punto.valor); // Agrega el valor del KPI al array de valores
-  });
-
-  // Configuración visual del gráfico (adaptada a react-native-chart-kit)
-  const configGrafico = {
-    backgroundColor: Colors.cardBackground,
-    backgroundGradientFrom: Colors.cardBackground,
-    backgroundGradientTo: Colors.cardBackground,
-    decimalPlaces: 2,
-    color: (opacity = 1) => Colors.accent,      // Color principal de la línea
-    labelColor: (opacity = 1) => Colors.textSecondary, // Color de las etiquetas
-    style: {
-      borderRadius: Layout.borderRadius.medium,
-    },
-    propsForDots: {
-      r: '4',                                   // Radio de los puntos
-      strokeWidth: '2',
-      stroke: Colors.primaryLight,
-    },
-    propsForBackgroundLines: {
-      strokeDasharray: '',                      // Líneas sólidas
-      stroke: Colors.border + '80',             // Opacidad del 50%
-    }
+  // Prepare chart data
+  const chartData = {
+    labels: datos.map(punto => 
+      `${punto.fecha.getDate()}/${punto.fecha.getMonth() + 1}`),
+    datasets: [{
+      data: datos.map(punto => punto.valor),
+      color: (opacity = 1) => Colors.accent,
+      strokeWidth: 2
+    }]
   };
 
   return (
     <View style={estilos.contenedorPrincipal}>
       <Text style={estilos.tituloGrafico}>{nombreKpi} - Histórico</Text>
-      
-      {/* Componente actualizado con nueva sintaxis */}
       <LineChart
-        data={{
-          labels: etiquetasGrafico,
-          datasets: [{
-            data: valoresGrafico,
-            color: (opacity = 1) => Colors.accent, // Color dinámico de la línea
-            strokeWidth: 3                         // Grosor de la línea
-          }],
-          legend: [`Histórico (${unidad})`]       // Leyenda actualizada
-        }}
+        data={chartData}
         width={Dimensions.get('window').width - Layout.spacing.medium * 2}
-        height={240}
-        yAxisSuffix={` ${unidad}`}                // Sufijo para valores Y
-        chartConfig={configGrafico}
-        bezier                                     // Suavizado de líneas
+        height={220}
+        yAxisSuffix={` ${unidad}`}
+        chartConfig={{
+          backgroundColor: Colors.cardBackground,
+          backgroundGradientFrom: Colors.cardBackground,
+          backgroundGradientTo: Colors.cardBackground,
+          decimalPlaces: 2,
+          color: (opacity = 1) => Colors.accent,
+          labelColor: (opacity = 1) => Colors.textSecondary,
+          propsForDots: {
+            r: '4',
+            strokeWidth: '2',
+            stroke: Colors.primaryLight
+          }
+        }}
+        bezier
         style={estilos.grafico}
-        withDots={datos.length <= 30}             // Puntos solo hasta 30 datos
       />
     </View>
   );
 };
+//old version
+// const KpiChart: React.FC<KpiChartProps> = ({ datos, nombreKpi, unidad }) => {
+//   // Validación inicial de datos - ahora muestra mensajes más específicos
+//   if (!datos || datos.length === 0) {
+//     return (
+//       <View style={estilos.contenedorPlaceholder}>
+//         <Text style={estilos.textoPlaceholder}>
+//           No hay datos históricos disponibles para {nombreKpi}.
+//         </Text>
+//       </View>
+//     );
+//   }
+
+//   if (datos.length === 1) {
+//     return (
+//       <View style={estilos.contenedorPlaceholder}>
+//         <Text style={estilos.textoPlaceholder}>
+//           Solo hay un dato registrado para {nombreKpi} (no suficiente para mostrar tendencia).
+//         </Text>
+//       </View>
+//     );
+//   }
+
+//   // Ordenar los datos por fecha (ascendente) para asegurar el orden correcto
+//   const datosOrdenados = [...datos].sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+
+//   // Preparación de etiquetas y valores optimizada
+//   const etiquetasGrafico: string[] = [];
+//   const valoresGrafico: number[] = [];
+//   const numeroMaximoEtiquetas = 6;
+//   const pasoEtiqueta = Math.max(1, Math.ceil(datosOrdenados.length / numeroMaximoEtiquetas));
+
+//   datosOrdenados.forEach((punto, index) => {
+//     valoresGrafico.push(punto.valor);
+    
+//     // Agrega etiquetas solo para ciertos puntos para evitar saturación
+//     if (index % pasoEtiqueta === 0 || index === datosOrdenados.length - 1) {
+//       // Mejor formato de fecha: "DD/MM" o "DD/MM/YY" si abarca múltiples años
+//       const yearNeeded = datosOrdenados.some(d => 
+//         d.fecha.getFullYear() !== punto.fecha.getFullYear()
+//       );
+      
+//       etiquetasGrafico.push(
+//         yearNeeded
+//           ? `${punto.fecha.getDate()}/${punto.fecha.getMonth() + 1}/${punto.fecha.getFullYear().toString().slice(-2)}`
+//           : `${punto.fecha.getDate()}/${punto.fecha.getMonth() + 1}`
+//       );
+//     } else {
+//       etiquetasGrafico.push('');
+//     }
+//   });
+
+//   // Configuración visual mejorada del gráfico
+//   const configGrafico = {
+//     backgroundColor: Colors.cardBackground,
+//     backgroundGradientFrom: Colors.cardBackground,
+//     backgroundGradientTo: Colors.cardBackground,
+//     decimalPlaces: 2,
+//     color: (opacity = 1) => Colors.accent,
+//     labelColor: (opacity = 1) => Colors.textSecondary,
+//     fillShadowGradient: Colors.accent + '40', // Sombra bajo la línea con opacidad
+//     fillShadowGradientOpacity: 0.2,
+//     style: {
+//       borderRadius: Layout.borderRadius.medium,
+//     },
+//     propsForDots: {
+//       r: datosOrdenados.length > 30 ? '0' : '4', // Oculta puntos si hay muchos datos
+//       strokeWidth: '2',
+//       stroke: Colors.primaryLight,
+//     },
+//     propsForBackgroundLines: {
+//       strokeDasharray: '',
+//       stroke: Colors.border + '80',
+//     },
+//     propsForLabels: {
+//       fontSize: 10,
+//     }
+//   };
+
+//   return (
+//     <View style={estilos.contenedorPrincipal}>
+//       <Text style={estilos.tituloGrafico}>
+//         {nombreKpi} - Evolución Histórica ({unidad})
+//       </Text>
+      
+//       <LineChart
+//         data={{
+//           labels: etiquetasGrafico,
+//           datasets: [{
+//             data: valoresGrafico,
+//             color: (opacity = 1) => Colors.accent,
+//             strokeWidth: 2
+//           }],
+//           legend: [`Última actualización: ${datosOrdenados[datosOrdenados.length - 1].valor} ${unidad}`]
+//         }}
+//         width={Dimensions.get('window').width - Layout.spacing.medium * 2}
+//         height={220}
+//         yAxisSuffix={` ${unidad}`}
+//         yAxisInterval={1}
+//         chartConfig={configGrafico}
+//         bezier
+//         style={estilos.grafico}
+//         withDots={datosOrdenados.length <= 30}
+//         withShadow={true}
+//         withInnerLines={true}
+//         withOuterLines={true}
+//         fromZero={false}
+//         getDotColor={(dataPoint, index) => {
+//           // Destaca el punto más reciente
+//           return index === datosOrdenados.length - 1 ? Colors.primary : Colors.accent;
+//         }}
+//       />
+//     </View>
+//   );
+// };
 
 // Estilos idénticos a la versión original
 const estilos = StyleSheet.create({

@@ -54,6 +54,18 @@ type ColorPalette = {
     gray: '#6C757D',
     lightGray: '#AAAAAA',
   };
+
+  export const ChartColors = [
+  '#005A9C', // Primary blue
+  '#FFB600', // Accent yellow
+  '#28A745', // Success green
+  '#DC3545', // Danger red
+  '#6C757D', // Gray
+  '#17A2B8', // Teal
+  '#6610F2', // Purple
+  '#E83E8C', // Pink
+  '#FD7E14', // Orange
+];
   
   // Exporta el tema actualmente activo (comenzando con el tema claro)
   const Colors: ColorPalette = lightColors;

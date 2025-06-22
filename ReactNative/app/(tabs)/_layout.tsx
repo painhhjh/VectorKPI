@@ -80,6 +80,16 @@ export default function TabLayout() {
          }}
        />
 
+       {/* Pantalla de Detalle de Categorias (oculta de las pestañas) */}
+       <Tabs.Screen
+         name="category-detail" // Corresponde al archivo app/(tabs)/kpi-detail.tsx
+         options={{
+           title: 'Categoria',
+           href: null, // Oculta esta pantalla de la barra de pestañas
+           headerShown: true,
+         }}
+       />
+
        {/* Pantalla de Detalle de Producto (NUEVO - oculta de las pestañas) */}
        <Tabs.Screen
          name="product-detail" // Corresponde al archivo app/(tabs)/product-detail.tsx

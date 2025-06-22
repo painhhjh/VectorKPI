@@ -5,13 +5,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router'; // Hooks de Expo Router
-import { obtenerDetalleKpi } from '../../services/kpiService';
+import { normalizarKpi, obtenerDetalleKpi } from '../../services/kpiService';
 import KpiChart from '../../components/KPI/KpiChart';
 import IndicadorCarga from '../../components/Common/LoadingIndicator';
 import MensajeError from '../../components/Common/ErrorMessage';
-import { KPI } from '../../types';
+import { KPI, KpiListResponse } from '../../types';
 import Colors from '../../constants/Colors';
 import Layout from '../../constants/Layout';
+import { get } from '@/services/api';
+import ApiConstants from '@/constants/Api';
 
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
 
@@ -31,12 +33,36 @@ const generarDatosSimulados = (valorActual: number): { fecha: Date; valor: numbe
 
 
 export default function PantallaDetalleKpi() {
-  const { id } = useLocalSearchParams<{ id?: string }>(); // Obtiene el 'id' de los parámetros de ruta
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
   const [kpi, setKpi] = useState<KPI | null>(null);
   const [datosGrafico, setDatosGrafico] = useState<{ fecha: Date; valor: number }[]>([]);
   const [estadoCarga, setEstadoCarga] = useState<EstadoCarga>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [todosKpis, setTodosKpis] = useState<KPI[]>([]);
+
+  // Función para cargar todos los KPIs
+  const cargarTodosKpis = useCallback(async () => {
+  try {
+    const { data } = await get<KpiListResponse>(ApiConstants.KPIS);
+    setTodosKpis(data.results.map(kpi => ({
+      ...kpi,
+      last_updated: kpi.last_updated ? new Date(kpi.last_updated).toISOString() : new Date().toISOString(),
+      created_at: kpi.created_at ? new Date(kpi.created_at).toISOString() : new Date().toISOString(),
+      value: Number(kpi.value) || 0,
+      target: kpi.target !== undefined ? Number(kpi.target) : undefined,
+      // Add progress calculation if needed
+      progress: kpi.target ? Math.min(Math.round((Number(kpi.value) / kpi.target) * 100), 100) : 0
+    })));
+  } catch (err) {
+    console.error('Error cargando todos los KPIs:', err);
+  }
+}, []);
+
+  // Cargar todos los KPIs al montar el componente
+  useEffect(() => {
+    cargarTodosKpis();
+  }, []);
 
   // Función para cargar los detalles del KPI
   const cargarDetalle = useCallback(async () => {
@@ -45,6 +71,7 @@ export default function PantallaDetalleKpi() {
       setEstadoCarga('error');
       return;
     }
+    
     console.log(`[KpiDetail] Cargando detalle para KPI ID: ${id}`);
     setEstadoCarga('cargando');
     setError(null);
@@ -52,11 +79,20 @@ export default function PantallaDetalleKpi() {
     try {
       const detalle = await obtenerDetalleKpi(Number(id));
       setKpi(detalle);
-      // --- ¡¡¡Simulación de datos para el gráfico!!! ---
-      // TODO: Reemplaza esto con la lógica para obtener datos históricos reales desde tu API
-      const datosSimulados = generarDatosSimulados(detalle.value);
-      setDatosGrafico(datosSimulados);
-      // --- Fin de la simulación ---
+
+      // Filtrar y ordenar KPIs con el mismo nombre en el frontend
+      const historico = todosKpis
+        .filter(k => k.name === detalle.name)
+        .sort((a, b) => 
+          new Date(a.last_updated).getTime() - new Date(b.last_updated).getTime()
+        );
+
+      const datosReales = historico.map(k => ({
+        fecha: new Date(k.last_updated),
+        valor: k.value
+      }));
+      
+      setDatosGrafico(datosReales);
       setEstadoCarga('exito');
       console.log(`[KpiDetail] Detalle cargado para: ${detalle.name}`);
     } catch (err: any) {
@@ -66,12 +102,14 @@ export default function PantallaDetalleKpi() {
       setKpi(null);
       setDatosGrafico([]);
     }
-  }, [id]); // Depende del ID
+  }, [id, todosKpis]); // Depende del ID y todosKpis
 
   // Carga los datos cuando el ID cambia o el componente se monta
   useEffect(() => {
-    cargarDetalle();
-  }, [cargarDetalle]); // Ejecuta cuando cargarDetalle (y por ende id) cambia
+    if (todosKpis.length > 0) { // Solo cargar detalle si ya tenemos todos los KPIs
+      cargarDetalle();
+    }
+  }, [cargarDetalle, todosKpis]);
 
 
   // Renderizado condicional
@@ -115,7 +153,7 @@ export default function PantallaDetalleKpi() {
         <Text style={estilos.infoAdicional}>Última Actualización: {new Date(kpi.last_updated).toLocaleString()}</Text>
       </View>
 
-      {/* Renderiza el gráfico con los datos */}
+      {/* Renderiza el gráfico con los datos REALES */}
       <KpiChart
         datos={datosGrafico}
         nombreKpi={kpi.name}

@@ -22,9 +22,7 @@ export const obtenerKpis = async (
 
 
     const params = construirQueryParams(filtros, pagina, porPagina);
-    const { data } = await get<KpiListResponse>(
-      ApiConstants.KPIS
-    );
+    const { data } = await get<KpiListResponse>(ApiConstants.KPIS);
   
     return normalizarRespuestaKpis(data);
 
@@ -40,10 +38,7 @@ export const obtenerDetalleKpi = async (id: number): Promise<KPI> => {
   try {
     const url = getKpiUrl(id);
     const { data } = await get<KPI>(url);
-      console.log(data);
-      console.log(normalizarKpi(data));
     return normalizarKpi(data);
-    
   } catch (error) {
     throw new Error(`Error al obtener KPI #${id}: ${(error as Error).message}`);
   }
@@ -157,7 +152,7 @@ const normalizarRespuestaKpis = (respuesta: KpiListResponse): KpiListResponse =>
   results: respuesta.results.map(normalizarKpi)
 });
 
-const normalizarKpi = (kpi: KPI): KPI => ({
+export const normalizarKpi = (kpi: KPI): KPI => ({
   ...kpi,
   last_updated: kpi.last_updated ? new Date(kpi.last_updated).toISOString() : new Date().toISOString(),
   created_at: kpi.created_at ? new Date(kpi.created_at).toISOString() : new Date().toISOString(),

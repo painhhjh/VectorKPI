@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Modal, TextInput, StyleSheet, Pressable } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Boton from '../Common/Button';
 import Colors from '../../constants/Colors';
@@ -49,9 +49,21 @@ export const KpiEditModal: React.FC<KpiEditModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.container}>
+    <Modal  visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
+
+      <Pressable 
+    style={styles.overlay} 
+    onPress={onCancel} // Click outside closes modal
+  >
+    <Pressable 
+      style={styles.modalContainer}
+      onPress={(e) => e.stopPropagation()} // Block event bubbling
+    >
+      <View style={[styles.overlay, { pointerEvents: 'box-none' }]}>
+        <View style={styles.container}
+          pointerEvents="box-none"
+          onStartShouldSetResponder={() => true}
+          >
           <Text style={styles.title}>Actualizar KPI: {kpi.name}</Text>
           
           <Text style={styles.label}>Valor</Text>
@@ -107,6 +119,8 @@ export const KpiEditModal: React.FC<KpiEditModalProps> = ({
           </View>
         </View>
       </View>
+          </Pressable>
+  </Pressable>
     </Modal>
   );
 };
@@ -118,9 +132,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
+  modalContainer: {
+    width: '100%', // Or your desired width
+    borderRadius: Layout.borderRadius.medium,
+    backgroundColor: 'transparent', // Critical - removes white background
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
   container: {
     backgroundColor: Colors.cardBackground,
     borderRadius: Layout.borderRadius.medium,
+    padding: Layout.spacing.large,
+    pointerEvents:'auto',
+    overflow: 'hidden', // Critical for containing touches
+  },
+  content: {
     padding: Layout.spacing.large,
   },
   title: {
