@@ -185,7 +185,6 @@ export default function PantallaInventario() {
         variante="primario"
         estiloContenedor={{ marginBottom: Layout.spacing.medium }}
       />
-
       {/* Modal para crear un nuevo producto */}
       {modalVisible && (
         <Modal
@@ -196,6 +195,62 @@ export default function PantallaInventario() {
         >
           {/* Contenedor del modal con fondo semitransparente */}
           <View style={estilos.modalOverlay}>
+
+
+   {/* Modal para seleccionar la categoría */}
+      <Modal
+        visible={showCategoryModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCategoryModal(false)}
+      >
+        <View style={estilos.categoryModalOverlay}>
+          <View style={estilos.modalContenidoCategoria}>
+            <Text style={estilos.modalTitulo}>Seleccionar Categoría</Text>
+
+            {/* MODIFICADO: Contenido mejorado para el modal de categorías */}
+            {estadoCargaCat === 'error' ? (
+              <Text style={estilos.textoModalInformativo}>Error al cargar categorías.</Text>
+            ) : categorias.length === 0 ? (
+              <Text style={estilos.textoModalInformativo}>No hay categorías disponibles.</Text> // Adjusted message
+            ) : (
+              <FlatList
+                data={categorias}
+                keyExtractor={(item: Categoria) => item.id.toString()}
+                renderItem={({ item }: { item: Categoria }) => (
+                  <TouchableOpacity
+                    style={[
+                        estilos.itemCategoriaModal,
+                        nuevoProducto.category_id === item.id && estilos.itemCategoriaSeleccionada
+                    ]}
+                    onPress={() => {
+                      setNuevoProducto({ ...nuevoProducto, category_id: item.id });
+                      setShowCategoryModal(false);
+                    }}
+                  >
+                    <Text style={{ color: nuevoProducto.category_id === item.id ? Colors.primary : Colors.text }}>
+                       {item.name}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+
+            
+
+            {/* Botón para cerrar el modal de categorías */}
+            <TouchableOpacity
+              style={estilos.botonCerrarModalCategoria}
+              onPress={() => setShowCategoryModal(false)}
+            >
+              <Text style={{ color: Colors.textSecondary, fontWeight: 'bold' }}>Cerrar</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
+
             {/* Contenido del modal */}
             <View style={estilos.modalContenido}>
               <Text style={estilos.modalTitulo}>Crear Producto</Text>
@@ -277,58 +332,7 @@ export default function PantallaInventario() {
         </Modal>
       )}
 
-      {/* Modal para seleccionar la categoría */}
-      <Modal
-        visible={showCategoryModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowCategoryModal(false)}
-      >
-        <View style={estilos.categoryModalOverlay}>
-          <View style={estilos.modalContenidoCategoria}>
-            <Text style={estilos.modalTitulo}>Seleccionar Categoría</Text>
-
-            {/* MODIFICADO: Contenido mejorado para el modal de categorías */}
-            {estadoCargaCat === 'error' ? (
-              <Text style={estilos.textoModalInformativo}>Error al cargar categorías.</Text>
-            ) : categorias.length === 0 ? (
-              <Text style={estilos.textoModalInformativo}>No hay categorías disponibles.</Text> // Adjusted message
-            ) : (
-              <FlatList
-                data={categorias}
-                keyExtractor={(item: Categoria) => item.id.toString()}
-                renderItem={({ item }: { item: Categoria }) => (
-                  <TouchableOpacity
-                    style={[
-                        estilos.itemCategoriaModal,
-                        nuevoProducto.category_id === item.id && estilos.itemCategoriaSeleccionada
-                    ]}
-                    onPress={() => {
-                      setNuevoProducto({ ...nuevoProducto, category_id: item.id });
-                      setShowCategoryModal(false);
-                    }}
-                  >
-                    <Text style={{ color: nuevoProducto.category_id === item.id ? Colors.primary : Colors.text }}>
-                       {item.name}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-
-            
-
-            {/* Botón para cerrar el modal de categorías */}
-            <TouchableOpacity
-              style={estilos.botonCerrarModalCategoria}
-              onPress={() => setShowCategoryModal(false)}
-            >
-              <Text style={{ color: Colors.textSecondary, fontWeight: 'bold' }}>Cerrar</Text>
-            </TouchableOpacity>
-
-          </View>
-        </View>
-      </Modal>
+   
 
       {/* Lista principal de productos */}
       <FlatList
