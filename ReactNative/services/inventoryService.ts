@@ -1,19 +1,22 @@
 // Servicio para gestión de inventario usando helpers API
 import { get, post, put, del } from './api';
 import ApiConstants, { getCategoryUrl, getProductUrl, getTransactionUrl } from '../constants/Api';
-import { Categoria, Producto, Transaccion, ListaProductosResponse } from '../types';
+import { Categoria, Producto, Transaccion, ListaProductosResponse } from '../types'; // Importa Categoria directamente
 
 // Obtiene todas las categorías
 export const obtenerCategorias = async (): Promise<Categoria[]> => {
   try {
     // El backend devuelve List[CategoryRead], que es una lista directa
     const { data } = await get<Categoria[]>(ApiConstants.INVENTORY_CATEGORIES);
-    return data.map(normalizarCategoria); // Mapeamos directamente sobre la lista
+    // Asumiendo que `normalizarCategoria` está definida o no es necesaria si la API devuelve el formato exacto.
+    // Si 'normalizarCategoria' no está definida globalmente, necesitarías incluirla aquí o en un archivo de utilidades.
+    return data.map(normalizarCategoria);
   } catch (error) {
-    console.error('[InventoryService] Error obteniendo categorías:', error); // Descomentar para depuración
+    console.error('[InventoryService] Error obteniendo categorías:', error);
     throw new Error(`Error obteniendo categorías: ${(error as Error).message}`);
   }
 };
+
 
 export const obtenerCategoriaPorId = async (id: number): Promise<Categoria> => {
   try {
@@ -21,22 +24,26 @@ export const obtenerCategoriaPorId = async (id: number): Promise<Categoria> => {
     const { data } = await get<Categoria>(url);
     return normalizarCategoria(data);
   } catch (error) {
-    console.error(`[InventoryService] Error obteniendo categoría ${id}:`, error); // Descomentar para depuración
+    console.error(`[InventoryService] Error obteniendo categoría ${id}:`, error);
     throw new Error(`Error obteniendo categoría ${id}: ${(error as Error).message}`);
   }
 };
 
+
 // Crea nueva categoría
-export const crearCategoria = async (datos: Omit<Categoria, 'id'>): Promise<Categoria> => {
+export const crearCategoria = async (datos: Omit<Categoria, 'id' | 'created_at' | 'updated_at'>): Promise<Categoria> => {
   try {
+    // Asegúrate de que los 'datos' que envías coincidan con CreateCategoryRequest del backend (name, description)
     const { data } = await post<Categoria>(ApiConstants.INVENTORY_CATEGORIES, datos);
     // Normalizamos la respuesta individual
     return normalizarCategoria(data);
-  } catch (error) {
+  } catch (error: any) { // Capturamos como any para acceder a propiedades de error detalladas
     console.error('[InventoryService] Error creando categoría:', error);
+    // Propaga el error para que el componente UI pueda mostrar el mensaje específico
     throw error;
   }
 };
+
 
 
 // Productos
@@ -57,7 +64,7 @@ export const obtenerProductos = async (
     // El backend devuelve List[ProductRead], que es una lista directa
     const { data } = await get<Producto[]>(ApiConstants.INVENTORY_PRODUCTS, params);
     // Normalizamos la lista directamente
-    return normalizarListaProductos(data);
+    return data.map(normalizarProducto);
   } catch (error) {
     console.error('[InventoryService] Error obteniendo productos:', error); // Descomentar para depuración
     throw new Error(`Error obteniendo productos: ${(error as Error).message}`);
@@ -80,7 +87,7 @@ export const crearProducto = async (datos: Omit<Producto, 'id'>): Promise<Produc
   try {
     const { data } = await post<Producto>(ApiConstants.INVENTORY_PRODUCTS, datos);
     return normalizarProducto(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[InventoryService] Error creando producto:', error);
     throw error;
   }
@@ -157,22 +164,23 @@ export const crearTransaccion = async (datos: Omit<Transaccion, 'id'>): Promise<
 
 const normalizarCategoria = (categoria: Categoria): Categoria => ({
   ...categoria,
-  created_at: normalizarFecha(categoria.created_at),
-  updated_at: categoria.updated_at ? normalizarFecha(categoria.updated_at) : ''
+  // Asume que created_at y updated_at ya vienen como strings ISO o que son opcionales
+  created_at: categoria.created_at ? normalizarFecha(categoria.created_at) : '',
+  updated_at: categoria.updated_at ? normalizarFecha(categoria.updated_at) : null // Mantener null si es null
 });
 
 const normalizarProducto = (producto: Producto): Producto => ({
   ...producto,
-  price: Number(producto.price) || 0,
+  price: Number(producto.price) || 0, // Asegura que price sea un número
   created_at: normalizarFecha(producto.created_at),
-  updated_at: producto.updated_at ? normalizarFecha(producto.updated_at) : '',
-  category: producto.category ? normalizarCategoria(producto.category) : undefined
+  updated_at: producto.updated_at ? normalizarFecha(producto.updated_at) : null,
+  category: producto.category ? normalizarCategoria(producto.category) : null // Normaliza la categoría anidada
 });
 
 const normalizarTransaccion = (transaccion: Transaccion): Transaccion => ({
   ...transaccion,
   timestamp: normalizarFecha(transaccion.timestamp),
-  product: transaccion.product ? normalizarProducto(transaccion.product) : undefined
+  product: transaccion.product ? normalizarProducto(transaccion.product) : null
 });
 
 const normalizarListaProductos = (listaProductos: Producto[]): Producto[] => {
