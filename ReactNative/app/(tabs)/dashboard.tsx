@@ -3,12 +3,12 @@
  * @description Muestra la lista de KPIs y permite refrescarla.
  */
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Alert } from 'react-native';
 import { router, useFocusEffect } from 'expo-router'; // Para recargar al enfocar la pestaña
 import KpiList from '../../components/KPI/KpiList';
 import IndicadorCarga from '../../components/Common/LoadingIndicator';
 import MensajeError from '../../components/Common/ErrorMessage';
-import { obtenerKpis, obtenerKpisDebug } from '../../services/kpiService';
+import { eliminarKpi, obtenerKpis, obtenerKpisDebug } from '../../services/kpiService';
 import { KpiListResponse, KPI, KpiTrend } from '../../types';
 import { KpiCategory } from '../../types/kpi'; // Usa la importación nombrada para KpiCategory
 import Color from '../../constants/Colors';
@@ -147,6 +147,38 @@ const handleCrearKpi = async () => {
   }
 };
 
+ const handleDeleteKpi = async (kpiName: string) => {
+  console.log("a")
+    try {
+      setEstadoCarga('cargando');
+      
+      // Filter all KPIs with this name from our existing data
+      const allVersions = kpis.filter(k => k.name === kpiName);
+      
+      // Also include any other KPIs with the same name that might not be in the current filtered view
+      // This ensures we get all versions, not just the most recent ones shown on dashboard
+      const allKpisResponse = await obtenerKpis();
+      const additionalVersions = allKpisResponse.results.filter(k => 
+        k.name === kpiName && !allVersions.some(v => v.id === k.id)
+      );
+      
+      const allVersionsToDelete = [...allVersions, ...additionalVersions];
+      
+      // Delete them one by one
+      for (const kpi of allVersionsToDelete) {
+        await eliminarKpi(Number(kpi.id));
+      }
+      
+      // Refresh the list
+      await cargarKpis();
+      Alert.alert("Success", `All versions of "${kpiName}" have been deleted`);
+    } catch (error: any) {
+      setError(error.message || 'Error deleting KPIs');
+    } finally {
+      setEstadoCarga('exito');
+    }
+  };
+
 const categoryFilterSection = (
  <View style={estilos.filterContainer}>
   {/* Category Dropdown */}
@@ -206,6 +238,8 @@ const categoryFilterSection = (
         onRefrescar={handleRefrescar}
         refrescando={refrescando}
         onEndReached={handleEndReached}
+        onUpdate={cargarKpis}
+        onDelete={handleDeleteKpi}
       />
     );
   };
