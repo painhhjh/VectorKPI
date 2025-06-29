@@ -13,7 +13,7 @@ import { router } from 'expo-router';
 import { Usuario, TokenResponse } from '../types';
 // Importa las funciones de almacenamiento agnósticas de plataforma
 import { guardarToken, borrarToken, CLAVE_TOKEN_AUTH } from '../services/api';
-import { iniciarSesion, obtenerUsuarioActual } from '../services/authService';
+import { actualizarUsuario, iniciarSesion, obtenerUsuarioActual } from '../services/authService';
 
 // --- Funciones getToken específicas de plataforma (duplicadas de api.ts para uso inicial) ---
 // En una app más grande, podrías tener un módulo 'storageService' separado.
@@ -45,6 +45,7 @@ interface AuthContextType {
     isLoading: boolean; // Para saber si se está cargando el estado inicial
     login: (credenciales: { email: string; password: string }) => Promise<void>;
     logout: () => void;
+    actualizarUsuario: (datos: DatosActualizacionUsuario) => Promise<void>;
     // Estado más detallado podría ser útil
     estado: 'inicializando' | 'cargando-login' | 'autenticado' | 'noAutenticado' | 'error';
 }
@@ -57,11 +58,29 @@ interface AuthProviderProps {
     children: ReactNode;
 }
 
+interface DatosActualizacionUsuario {
+  email?: string;
+  password?: string;
+  profile?: {
+    full_name?: string;
+  };
+}
+
 // Componente Proveedor del Contexto
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [token, setToken] = useState<string | null>(null);
     const [usuario, setUsuario] = useState<Usuario | null>(null);
-    const [estado, setEstado] = useState<AuthContextType['estado']>('inicializando');
+    const [estado, setEstado] = useState<AuthContextType['estado']>('inicializando');    
+
+    const actualizarUsuarioContexto = useCallback(async (datos: DatosActualizacionUsuario) => {
+    try {
+      const updatedUser = await actualizarUsuario(datos); // Call service
+      setUsuario(updatedUser); // Update state
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  }, []);
 
     // Carga inicial del token y datos del usuario al montar el provider
     useEffect(() => {
@@ -181,9 +200,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             isLoading: estado === 'inicializando' || estado === 'cargando-login', // Verdadero si está inicializando o logueando
             login,
             logout,
+            actualizarUsuario: actualizarUsuarioContexto,
             estado, // Expone el estado detallado
         }),
-        [token, usuario, estado, login, logout]
+        [token, usuario, estado, login, logout, actualizarUsuario]
     );
 
     return (

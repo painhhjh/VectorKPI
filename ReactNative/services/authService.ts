@@ -1,7 +1,7 @@
 // ReactNative/services/authService.ts
 // Servicio para interactuar con los endpoints de la API relacionados con la autenticación.
 
-import { post, get } from './api';
+import { post, get, put } from './api';
 import ApiConstants from '../constants/Api';
 import { Usuario, TokenResponse } from '../types';
 import { AxiosHeaders } from 'axios'; // Quitamos 'axios' si no se usa directamente aquí
@@ -11,7 +11,9 @@ import { Platform } from 'react-native'; // Necesario para la lógica de almacen
 interface DatosRegistro {
   email: string;
   password: string;
-  nombre?: string; // Revisar si se usa/envía correctamente
+  profile: {
+    full_name: string; // Nested under 'profile'
+  };
 }
 
 interface DatosLogin {
@@ -22,10 +24,32 @@ interface DatosLogin {
 interface RespuestaRegistro {
   id: number;
   email: string;
+  profile: {
+    full_name: string; // Reflects the backend response
+  };
   is_active: boolean;
   created_at: string;
   updated_at?: string | null;
 }
+
+interface DatosActualizacionUsuario {
+  email?: string;
+  password?: string;
+  profile?: {
+    full_name?: string;
+  };
+}
+
+export const actualizarUsuario = async (datos: DatosActualizacionUsuario): Promise<Usuario> => {
+  try {
+    const { data } = await put<Usuario>(ApiConstants.USER_ME, datos);
+    console.log("this one",data)
+    return data;
+  } catch (error: any) {
+    console.error('[AuthService] Error al actualizar usuario:', error);
+    throw new Error(error.message || 'Error al actualizar perfil');
+  }
+};
 
 // --- Funciones Helper para construir URL (alternativa) ---
 const buildUrl = (endpoint: string): string => {
@@ -85,6 +109,7 @@ export const registrarUsuario = async (
   const url = ApiConstants.USER; // Ruta relativa
   console.log(`[AuthService] Registrando usuario: ${datosRegistro.email} en ${ApiConstants.BASE_URL}/${url}`);
   try {
+    console.log("este es datosRegistro antes de que se envie:", datosRegistro)
     const { data } = await post<RespuestaRegistro>(
       url,
       datosRegistro // Envía JSON
