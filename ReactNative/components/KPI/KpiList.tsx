@@ -19,6 +19,8 @@ interface KpiListProps {
   onRefrescar?: () => void; // Función para ejecutar al hacer "pull-to-refresh"
   refrescando?: boolean; // Estado para el control de refresco
   onEndReached?: () => void; // Función para cargar más datos al llegar al final (paginación)
+  onUpdate?: () => void; // Necesario para pasar cargarKpis al modal de actualizar
+  onDelete?: (name: string) => void;
 }
 
 const KpiList: React.FC<KpiListProps> = ({
@@ -28,11 +30,16 @@ const KpiList: React.FC<KpiListProps> = ({
   onRefrescar,
   refrescando = false, // Valor por defecto para refrescando
   onEndReached,
+  onUpdate,
+  onDelete
 }) => {
 
   // Renderiza el componente KpiCard para cada item
   const renderizarItem = ({ item }: { item: KPI }) => (
-    <KpiCard kpi={item} />
+    <KpiCard kpi={item} 
+    onUpdate={onUpdate}
+    onDelete={onDelete}/>
+    
   );
 
   // Componente a mostrar si la lista está vacía

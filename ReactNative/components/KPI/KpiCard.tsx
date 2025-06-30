@@ -1,7 +1,7 @@
 //muestra un resumen de un KPI en una tarjeta. Muestra nombre, valor, unidad, objetivo y tendencia. 
 // Es presionable para navegar al detalle.
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Tarjeta from '../Common/Card'; // Importa el componente base de tarjeta
@@ -11,6 +11,7 @@ import Layout from '../../constants/Layout';
 
 import { KpiEditModal } from './KpiEditModal';
 import { actualizarKpiVersion } from '../../services/kpiService';
+import Boton from '../Common/Button';
 
 
 
@@ -19,6 +20,7 @@ import { actualizarKpiVersion } from '../../services/kpiService';
 interface KpiCardProps {
   kpi: KPI; // Los datos del KPI a mostrar
   onUpdate?: () => void;
+  onDelete?: (name: string) => void;
 }
 
 
@@ -54,10 +56,27 @@ const obtenerInfoTendencia = (tendencia: KpiTrend): { icono: React.ComponentProp
   }
 };
 
-const KpiCard: React.FC<KpiCardProps> = ({ kpi, onUpdate}) => {
+
+
+const KpiCard: React.FC<KpiCardProps> = ({ kpi, onUpdate, onDelete}) => {
   const router = useRouter();
   const { icono: iconoTendencia, color: colorTendencia } = obtenerInfoTendencia(kpi.trend);
   const [editModalVisible, setEditModalVisible] = useState(false);
+
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDeletePress = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    setShowDeleteModal(false);
+    onDelete && onDelete(kpi.name);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+  };  
 
   const handleEdit = () => {
     setEditModalVisible(true);
@@ -73,8 +92,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ kpi, onUpdate}) => {
     });
 
 
-
-  };
+  }; 
 
    const handleEditSubmit = async (values: {
     value: number;
@@ -91,6 +109,21 @@ const KpiCard: React.FC<KpiCardProps> = ({ kpi, onUpdate}) => {
     }
   };
 
+
+  const handleDelete = async () => {
+    Alert.alert(
+      "Confirm Deletion",
+      `Are you sure you want to delete all versions of "${kpi.name}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: () => onDelete && onDelete(kpi.name) 
+        }
+      ]
+    );
+  };
 
 
 
@@ -113,6 +146,16 @@ const KpiCard: React.FC<KpiCardProps> = ({ kpi, onUpdate}) => {
             style={estilos.botonEditar}
           >
           <Ionicons name="pencil" size={20} color={Colors.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+              onPress={(e) => {
+                e.stopPropagation();
+                handleDeletePress();
+              }}
+              style={estilos.botonEditar}
+            >
+              <Ionicons name="trash" size={20} color={Colors.danger} />
           </TouchableOpacity>
 
           <Ionicons name={iconoTendencia} size={28} color={colorTendencia} /> {/* Icono de tendencia */}
@@ -143,12 +186,45 @@ const KpiCard: React.FC<KpiCardProps> = ({ kpi, onUpdate}) => {
         />      
       
       </Tarjeta>
+
+ {/* Delete Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelDelete}
+      >
+        <View style={estilos.modalOverlay}>
+          <View style={estilos.modalContent}>
+            <Text style={estilos.modalTitle}>Delete KPI</Text>
+            <Text style={estilos.modalText}>
+              Are you sure you want to delete all versions of "{kpi.name}"?
+            </Text>
+            <View style={estilos.modalButtons}>
+              <Boton
+                titulo="Cancel"
+                onPress={cancelDelete}
+                variante="secundario"
+                estiloContenedor={estilos.modalButton}
+              />
+              <Boton
+                titulo="Delete"
+                onPress={confirmDelete}
+                variante="peligro"
+                estiloContenedor={estilos.modalButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>    
+
     </TouchableOpacity>
+    
     
   );
 };
 
-const estilos = StyleSheet.create({
+const estilos = StyleSheet.create({ 
   tarjetaContenedor: {
     // Estilo base para el contenedor de la tarjeta
   },
@@ -202,6 +278,38 @@ const estilos = StyleSheet.create({
     color: Colors.gray, // Color gris
     marginTop: Layout.spacing.tiny, // Espaciado superior pequeño
     textAlign: 'right', // Alineación del texto a la derecha
+  },
+
+   modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: Colors.cardBackground,
+    borderRadius: Layout.borderRadius.medium,
+    padding: Layout.spacing.large,
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: Layout.fontSize.heading,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: Layout.spacing.medium,
+  },
+  modalText: {
+    fontSize: Layout.fontSize.body,
+    color: Colors.textSecondary,
+    marginBottom: Layout.spacing.large,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  modalButton: {
+    marginLeft: Layout.spacing.medium,
+    minWidth: 80,
   },
 });
 

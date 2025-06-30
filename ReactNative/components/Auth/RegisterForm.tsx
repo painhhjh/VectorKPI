@@ -14,6 +14,9 @@ import { registrarUsuario } from '../../services/authService';
 interface RespuestaRegistroBackend {
   id: number;
   email: string;
+  profile: {
+    full_name: string; // Reflects the backend response
+  };
   is_active: boolean;
   created_at: string;
   updated_at?: string | null;
@@ -27,6 +30,7 @@ const FormularioRegistro: React.FC = () => {
   const [confirmarPassword, setConfirmarPassword] = useState<string>('');
   const [errorLocal, setErrorLocal] = useState<string | null>(null);
   const [cargando, setCargando] = useState<boolean>(false);
+  const [full_name, setfull_name] = useState<string>('');
 
   // Manejador para el envío del formulario de registro
   const manejarSubmit = async () => {
@@ -64,7 +68,9 @@ const FormularioRegistro: React.FC = () => {
 
     try {
       //Llamada REAL a la API
-      const datosRegistro = { email, password }; // Sin nombre por ahora
+      const datosRegistro = { email, password, profile: {  // Nest full_name under 'profile'
+          full_name: full_name.trim(),
+        }, }; // Sin nombre por ahora
           // 'nombre' no está en UserCreate, si quieres enviarlo,
           // necesitarías añadirlo al schema UserCreate en el backend
           // y potencialmente a ProfileCreate si va en el perfil.
@@ -109,6 +115,14 @@ const FormularioRegistro: React.FC = () => {
         editable={!cargando}
         returnKeyType="next"
       /> */}
+
+      <CampoEntrada
+        etiqueta="Nombre Completo"
+        placeholder="Tu nombre"
+        value={full_name}
+        onChangeText={setfull_name}
+        autoCapitalize="words"
+      />
 
       {/* Campo de Email */}
       <CampoEntrada
