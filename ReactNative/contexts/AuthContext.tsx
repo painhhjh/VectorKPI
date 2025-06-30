@@ -7,7 +7,7 @@ import React, {
     useCallback,
     ReactNode,
 } from 'react';
-// Quitamos SecureStore, ya no se usa directamente aquí
+
 import { Platform } from 'react-native'; // Podría ser útil para debug
 import { router } from 'expo-router';
 import { Usuario, TokenResponse } from '../types';
@@ -16,7 +16,6 @@ import { guardarToken, borrarToken, CLAVE_TOKEN_AUTH } from '../services/api';
 import { iniciarSesion, obtenerUsuarioActual } from '../services/authService';
 
 // --- Funciones getToken específicas de plataforma (duplicadas de api.ts para uso inicial) ---
-// En una app más grande, podrías tener un módulo 'storageService' separado.
 const getTokenContext = async (): Promise<string | null> => {
   if (Platform.OS === 'web') {
     try {
