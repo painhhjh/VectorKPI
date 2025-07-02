@@ -13,7 +13,7 @@ export const obtenerKpisDebug = async () => {
 
 
 // Obtener lista de KPIs
-export const obtenerKpis = async (
+export const obtenerKpis = async (  
   filtros?: KpiFilters,
   pagina: number = 1,
   porPagina: number = 10
@@ -21,7 +21,9 @@ export const obtenerKpis = async (
   try {
 
 
-    const params = construirQueryParams(filtros, pagina, porPagina);
+    const params = construirQueryParams(filtros, pagina, porPagina); 
+    
+ 
     const { data } = await get<KpiListResponse>(ApiConstants.KPIS);
   
     return normalizarRespuestaKpis(data);
@@ -88,7 +90,8 @@ export const actualizarKpiVersion = async (kpiOriginal: KPI, nuevosValores: {
       // System-generated
       last_updated: new Date().toISOString(),
       target: kpiOriginal.target,
-      progreso: undefined // Will be recalculated
+      progreso: undefined, // Will be recalculated
+      owner_id: kpiOriginal.owner_id
     });
         
     return normalizarKpi(data);

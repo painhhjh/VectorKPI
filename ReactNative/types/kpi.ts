@@ -19,6 +19,7 @@ export interface KPI {
   last_updated: string; // Cadena de fecha ISO 8601 de la última actualización
   created_at: string; // Cadena de fecha ISO 8601 de su creación
   progreso?: number;
+  owner_id: number;
 }
 
 // Interfaz para la estructura de la respuesta de la API al obtener una lista de KPIs

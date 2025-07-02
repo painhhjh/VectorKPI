@@ -16,6 +16,7 @@ import { Button, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Boton from '@/components/Common/Button';
 import Layout from '@/constants/Layout';
+import { useAuth } from '@/contexts/useAuth';
 
 
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
@@ -40,7 +41,8 @@ export default function PantallaDashboard() {
   const [trend, setTrend] = useState<KpiTrend>('stable');
   const [selectedCategory, setSelectedCategory] = useState<KpiCategory>('seguridad');
   
-
+  const { usuario } = useAuth();
+  const userId = Number(usuario?.id);
 
 const filtrarKpisRecientes = (kpis: KPI[]) => {
   const kpisUnicos = new Map<string, KPI>();
@@ -78,7 +80,8 @@ const filtrarKpisRecientes = (kpis: KPI[]) => {
       //   last_updated: k.last_updated,
       //   value: k.value
       // })));
-      setKpis(kpisRecientes);
+      const userKpis = kpisRecientes.filter(kpi => kpi.owner_id === userId);
+      setKpis(userKpis);
       setEstadoCarga('exito');
       console.log('[Dashboard] KPIs cargados exitosamente.');
       // setTieneMasPaginas(!!respuesta.next);
@@ -128,7 +131,8 @@ const handleCrearKpi = async () => {
       created_at: new Date().toISOString(),
       description: description,
       target: target ? Number(target) : undefined,
-      progreso: undefined // Calculated automatically
+      progreso: undefined, // Calculated automatically
+      owner_id:userId
     });
     setModalVisible(false);
     // Reset all fields

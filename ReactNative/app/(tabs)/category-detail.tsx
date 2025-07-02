@@ -9,6 +9,9 @@ import Colors, { ChartColors } from '../../constants/Colors';
 import Layout from '../../constants/Layout';
 import { BarChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
+import { useAuth } from '@/contexts/useAuth';
+
+   
 
 
 export default function CategoryDetailScreen() {
@@ -17,6 +20,8 @@ export default function CategoryDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const screenWidth = Dimensions.get('window').width;
+  const { usuario } = useAuth();
+  const userId = Number(usuario?.id);   
 
   useEffect(() => {
     const loadData = async () => {
@@ -27,9 +32,12 @@ export default function CategoryDetailScreen() {
         
         // Filter by category first
         const categoryKpis = kpis.filter(kpi => kpi.category === category);
+
+        //filtro por usuario
+        const userKpis = categoryKpis.filter(kpi => kpi.owner_id === userId);
         
         // Get most recent KPI per unique name
-        const uniqueKpis = getMostRecentKpisByName(categoryKpis);
+        const uniqueKpis = getMostRecentKpisByName(userKpis);
         
         setFilteredKpis(uniqueKpis);
         setError(null);
