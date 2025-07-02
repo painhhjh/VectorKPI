@@ -1,5 +1,5 @@
 // ReactNative/constants/Api.ts
-const API_IP = '172.16.40.103'; // Cambia esto por tu IP local si es necesario
+const API_IP = '192.168.3.27'; // IP del backend
 const API_PORT = 8000; // Puerto donde corre FastAPI
 const API_VERSION = 'v1';
 
@@ -11,7 +11,6 @@ console.log(`[API Constants] Conectando a la API en: ${BASE_URL}`);
 const ApiConstants = {
     BASE_URL, // URL Base completa
 
-    // Rutas relativas (sin barra inicial)
     // Autenticación
     AUTH_LOGIN: 'auth/token',
     AUTH_TEST_TOKEN: 'auth/test-token',
