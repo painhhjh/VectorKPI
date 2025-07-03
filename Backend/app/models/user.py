@@ -1,3 +1,4 @@
+# Backend\app\models\user.py
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -25,5 +26,8 @@ class User(Base):
     # Relación uno-a-muchos con AI Logs
     ai_logs = relationship("AiLog", back_populates="user")
 
+    #relación uno-a-muchos con Products (propietario de productos)
+    products = relationship("Product", back_populates="owner", cascade="all, delete-orphan")
+    
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}')>"

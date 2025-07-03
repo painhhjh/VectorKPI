@@ -18,11 +18,17 @@ class Product(Base):
     # Clave foránea a Categories
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
 
+    # Clave foránea a Users (propietario del producto)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relación inversa con Category
     category = relationship("Category", back_populates="products")
+
+    # Relación con User (propietario)
+    owner = relationship("User", back_populates="products")
 
     # Relación uno-a-muchos con Transactions
     transactions = relationship("Transaction", back_populates="product", cascade="all, delete-orphan")

@@ -1,9 +1,8 @@
-/**
- * @file Define las interfaces TypeScript para las entidades del módulo de inventario.
- */
+// React Native/types/inventory.ts
+
 import { Usuario } from './user'; // Asumiendo que UserRead se mapea a Usuario
 
-// Interfaz para Categoría de Producto
+// Interfaz para Categoría de Producto (refleja app/schemas/category.py -> CategoryRead)
 export interface Categoria {
   id: number;
   name: string;
@@ -12,18 +11,45 @@ export interface Categoria {
   updated_at?: string | null; // Fecha ISO 8601
 }
 
-// Interfaz para Producto
+// Interfaz para la solicitud de creación de un producto (refleja app/schemas/product.py -> ProductCreate)
+export interface ProductCreateRequest {
+  name: string;
+  description?: string;
+  value?: number; // Usamos 'number' para Decimal en TypeScript
+  target?: number; // Nuevo campo para KPI
+  unit?: string; // Nuevo campo para KPI
+  price?: number; // Usamos 'number' para Decimal en TypeScript
+  stock: number;
+  sku?: string | null;
+  category_id: number; // Requerido en ProductCreate
+  owner_id: number; // Requerido en ProductCreate
+}
+
+// Interfaz para la actualización de un producto (refleja app/schemas/product.py -> ProductUpdate)
+export interface ProductUpdateRequest {
+  name?: string;
+  description?: string;
+  price?: number;
+  stock?: number;
+  sku?: string;
+  category_id?: number;
+  owner_id?: number;
+}
+
+// Interfaz para la estructura del producto leído (refleja app/schemas/product.py -> ProductRead)
 export interface Producto {
   id: number;
   name: string;
   description?: string | null;
-  price?: number | string; // FastAPI Numeric/Decimal puede ser string o number en JSON
+  price?: number; // Usamos 'number' para Decimal en TypeScript
   stock: number;
   sku?: string | null;
-  category_id?: number | null;
+  category_id?: number | null; // Puede ser nulo en el modelo, pero requerido para creación. Aquí reflejamos ProductRead.
+  owner_id: number; // Este campo es requerido en ProductRead
   created_at: string; // Fecha ISO 8601
   updated_at?: string | null; // Fecha ISO 8601
-  category?: Categoria | null; // Objeto categoría anidado (opcional, según la respuesta API)
+  category?: Categoria | null; // Relación anidada, opcional si no siempre se carga
+  owner?: Usuario | null; // Relación anidada con el propietario (si ProductRead lo incluye)
 }
 
 // Tipos permitidos para las transacciones
@@ -44,21 +70,20 @@ export interface Transaccion {
 
 // Interfaz para la respuesta de lista de productos (si la API pagina o estructura así)
 export interface ListaProductosResponse {
-    count: number; // Total de productos que coinciden con los filtros
-    results: Producto[]; // Array de productos en la página actual
-    // Podrías añadir 'next' y 'previous' si tu API los devuelve
-    // next?: string | null;
-    // previous?: string | null;
+  count: number; // Total de productos que coinciden con los filtros
+  results: Producto[]; // Array de productos en la página actual
+  next?: string | null;
+  previous?: string | null;
 }
 
 // Interfaz para la respuesta de lista de categorías (si es necesario)
 export interface ListaCategoriasResponse {
-    count: number;
-    results: Categoria[];
+  count: number;
+  results: Categoria[];
 }
 
 // Interfaz para la respuesta de lista de transacciones (si es necesario)
 export interface ListaTransaccionesResponse {
-    count: number;
-    results: Transaccion[];
+  count: number;
+  results: Transaccion[];
 }

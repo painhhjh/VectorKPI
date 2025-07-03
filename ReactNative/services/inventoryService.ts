@@ -1,7 +1,9 @@
+// React Native/services/inventoryService.ts
 // Servicio para gestión de inventario usando helpers API
 import { get, post, put, del } from './api';
 import ApiConstants, { getCategoryUrl, getProductUrl, getTransactionUrl } from '../constants/Api';
-import { Categoria, Producto, Transaccion, ListaProductosResponse } from '../types'; // Importa Categoria directamente
+import { Categoria, Producto, Transaccion, ListaProductosResponse, ProductCreateRequest, ProductUpdateRequest } from '../types/inventory'; // Importa ProductCreateRequest
+import { AxiosResponse } from 'axios'; // Importa AxiosResponse para tipado
 
 // Obtiene todas las categorías
 export const obtenerCategorias = async (): Promise<Categoria[]> => {
@@ -12,11 +14,10 @@ export const obtenerCategorias = async (): Promise<Categoria[]> => {
     // Si 'normalizarCategoria' no está definida globalmente, necesitarías incluirla aquí o en un archivo de utilidades.
     return data.map(normalizarCategoria);
   } catch (error) {
-    console.error('[InventoryService] Error obteniendo categorías:', error);
+    console.error('[InventoryService] Error obteniendo categorías:', error); // Descomentar para depuración
     throw new Error(`Error obteniendo categorías: ${(error as Error).message}`);
   }
 };
-
 
 export const obtenerCategoriaPorId = async (id: number): Promise<Categoria> => {
   try {
@@ -29,7 +30,6 @@ export const obtenerCategoriaPorId = async (id: number): Promise<Categoria> => {
   }
 };
 
-
 // Crea nueva categoría
 export const crearCategoria = async (datos: Omit<Categoria, 'id' | 'created_at' | 'updated_at'>): Promise<Categoria> => {
   try {
@@ -39,11 +39,9 @@ export const crearCategoria = async (datos: Omit<Categoria, 'id' | 'created_at' 
     return normalizarCategoria(data);
   } catch (error: any) { // Capturamos como any para acceder a propiedades de error detalladas
     console.error('[InventoryService] Error creando categoría:', error);
-    // Propaga el error para que el componente UI pueda mostrar el mensaje específico
     throw error;
   }
 };
-
 
 
 // Productos
@@ -83,7 +81,7 @@ export const obtenerDetalleProducto = async (id: number): Promise<Producto> => {
 };
 
 // Crea nuevo producto
-export const crearProducto = async (datos: Omit<Producto, 'id'>): Promise<Producto> => {
+export const crearProducto = async (datos: ProductCreateRequest): Promise<Producto> => { // Usa ProductCreateRequest
   try {
     const { data } = await post<Producto>(ApiConstants.INVENTORY_PRODUCTS, datos);
     return normalizarProducto(data);
@@ -95,7 +93,7 @@ export const crearProducto = async (datos: Omit<Producto, 'id'>): Promise<Produc
 
 export const actualizarProducto = async (
   id: number,
-  cambios: Partial<Omit<Producto, 'id'>>
+  cambios: ProductUpdateRequest // Usa ProductUpdateRequest
 ): Promise<Producto> => {
   try {
     const url = getProductUrl(id);
@@ -150,7 +148,8 @@ export const obtenerDetalleTransaccion = async (id: number): Promise<Transaccion
   }
 };
 
-export const crearTransaccion = async (datos: Omit<Transaccion, 'id'>): Promise<Transaccion> => {
+export const crearTransaccion = async (datos: Omit<Transaccion, 'id' | 'timestamp' | 'product' | 'user'>): 
+Promise<Transaccion> => {
   try {
     const { data } = await post<Transaccion>(ApiConstants.INVENTORY_TRANSACTIONS, datos);
     return normalizarTransaccion(data);
@@ -164,23 +163,26 @@ export const crearTransaccion = async (datos: Omit<Transaccion, 'id'>): Promise<
 
 const normalizarCategoria = (categoria: Categoria): Categoria => ({
   ...categoria,
-  // Asume que created_at y updated_at ya vienen como strings ISO o que son opcionales
-  created_at: categoria.created_at ? normalizarFecha(categoria.created_at) : '',
-  updated_at: categoria.updated_at ? normalizarFecha(categoria.updated_at) : null // Mantener null si es null
+  created_at: normalizarFecha(categoria.created_at),
+  updated_at: categoria.updated_at ? normalizarFecha(categoria.updated_at) : null // Cambiado a null si no hay updated_at
 });
 
 const normalizarProducto = (producto: Producto): Producto => ({
   ...producto,
   price: Number(producto.price) || 0, // Asegura que price sea un número
+  stock: Number(producto.stock), // Asegura que stock sea un número
   created_at: normalizarFecha(producto.created_at),
-  updated_at: producto.updated_at ? normalizarFecha(producto.updated_at) : null,
-  category: producto.category ? normalizarCategoria(producto.category) : null // Normaliza la categoría anidada
+  updated_at: producto.updated_at ? normalizarFecha(producto.updated_at) : null, // Cambiado a null si no hay updated_at
+  category: producto.category ? normalizarCategoria(producto.category) : null, // Cambiado a null si no hay categoría
+  owner: producto.owner ? producto.owner : null // Asegura que owner sea Usuario o null
 });
 
 const normalizarTransaccion = (transaccion: Transaccion): Transaccion => ({
   ...transaccion,
+  quantity: Number(transaccion.quantity), // Asegura que quantity sea un número
   timestamp: normalizarFecha(transaccion.timestamp),
-  product: transaccion.product ? normalizarProducto(transaccion.product) : null
+  product: transaccion.product ? normalizarProducto(transaccion.product) : null, // Cambiado a null si no hay producto
+  user: transaccion.user ? transaccion.user : null // Asegura que user sea Usuario o null
 });
 
 const normalizarListaProductos = (listaProductos: Producto[]): Producto[] => {
@@ -188,9 +190,8 @@ const normalizarListaProductos = (listaProductos: Producto[]): Producto[] => {
   return listaProductos.map(normalizarProducto);
 };
 
-const normalizarFecha = (fecha?: string | Date): string => {
+const normalizarFecha = (fecha?: string | Date | null): string => { // Acepta null
   if (!fecha) return '';
-  // Asegurarse de que la fecha sea un formato válido para el constructor de Date
   const date = new Date(fecha);
   return isNaN(date.getTime()) ? '' : date.toISOString();
 };
