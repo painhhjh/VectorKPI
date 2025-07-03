@@ -40,8 +40,16 @@
    # al ejecuar el expo start pueden probar la aplicación en su teléfono y en el navegador http://127.0.0.1:8000/usuarios/iniciar_sesion/
    # para probar la app en su teléfono tienen que instalar expo go y seguir los pasos
    # Nunca modifiquen manualmente la estructura de la BD fuera de Alembic
-   # Ejecuten alembic upgrade head siempre después de generar una migración
-   
+      # Ejecuten `alembic upgrade head` siempre después de generar una migración
+
+      ## ¿Y si quiero retornar una migración?
+      Si necesitas deshacer la última migración, puedes usar el siguiente comando:
+
+      ```bash
+      alembic downgrade -1
+      ```
+
+      Esto regresará la base de datos al estado anterior a la última migración. Si quieres volver a una migración específica, reemplaza `-1` por el identificador de la migración deseada. 
 
 
 si les da algún error, ejecuten    

@@ -24,12 +24,12 @@ app = FastAPI(
 
 # Lista de orígenes permitidos para CORS
 allowed_origins = [
+    "http://192.168.0.193:8081",     # Expo Go en la IP local
     "http://localhost",               # localhost simple
     "http://localhost:8081",         # Puerto por defecto de Expo Go
     "http://localhost:5432",        # Puerto para PostgreSqL
-    "http://192.168.3.231",          # Loopback de localhost en red local
-    "http://192.168.3.231:8081",     # Expo Go en la IP local
-    "http://192.168.3.231:8000",     # Backend FastAPI en la IP local
+    "http://192.168.0.193",          # Loopback de localhost en red local
+    "http://192.168.0.193:8000",     # Backend FastAPI en la IP local
     "https://tu-dominio-frontend.com", # URL de producción del frontend (modificar según despliegue)
     "http://127.0.0.1:8000",
     "http://127.0.0.1:8081", # localhost simple
@@ -50,6 +50,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"]  # Importante para downloads
 )
 
 # --- Incluir routers ---
