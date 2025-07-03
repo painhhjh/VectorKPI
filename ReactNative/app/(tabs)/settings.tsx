@@ -16,7 +16,7 @@ export default function PantallaConfiguracion() {
   const [formData, setFormData] = useState({
     email: usuario?.email || '',
     full_name: usuario?.profile?.full_name || '',
-    password: '', // Password field starts empty
+    new_password: '', // Password field starts empty
   });
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -34,25 +34,71 @@ export default function PantallaConfiguracion() {
     }
   };
 
+  // const handleSubmit = async () => {
+  //   if (!formData.email) {
+  //     setError('El email es obligatorio');
+  //     return;
+  //   }
+  //   setCargando(true);
+  //   try {
+  //       await actualizarUsuario({
+  //       email: formData.email,
+  //       password: formData.password || undefined,
+  //       profile: { full_name: formData.full_name },
+  //       });
+  //       setModalVisible(false); 
+  //   } catch (err: any) {
+  //     setError(err.message || 'Error al actualizar');
+  //   } finally {
+  //     setCargando(false);
+  //   }
+  // };
+
   const handleSubmit = async () => {
-    if (!formData.email) {
-      setError('El email es obligatorio');
-      return;
-    }
-    setCargando(true);
-    try {
-        await actualizarUsuario({
-        email: formData.email,
-        password: formData.password || undefined,
-        profile: { full_name: formData.full_name },
-        });
-        setModalVisible(false); 
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar');
-    } finally {
-      setCargando(false);
-    }
-  };
+  // Clear previous errors
+  setError(null);
+
+  // Validation Rules
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+  // Validate Email
+  if (!formData.email) {
+    setError('El email es obligatorio');
+    return;
+  } else if (!emailRegex.test(formData.email)) {
+    setError('Por favor ingresa un email válido (ej: usuario@dominio.com)');
+    return;
+  }
+
+  // Validate Full Name
+  if (!formData.full_name || formData.full_name.trim().length < 2) {
+    setError('El nombre completo debe tener al menos 2 caracteres');
+    return;
+  }
+
+  // Validate Password (only if provided)
+  if (formData.new_password && !passwordRegex.test(formData.new_password)) {
+    setError('La contraseña debe tener al menos 8 caracteres e incluir letras y números');
+    return;
+  }
+
+  setCargando(true);
+
+  try {
+    await actualizarUsuario({
+      email: formData.email,
+      ...(formData.new_password && { password: formData.new_password }), // Only include if provided
+      profile: { full_name: formData.full_name },
+    });
+    setModalVisible(false);
+    Alert.alert('Éxito', 'Datos actualizados correctamente');
+  } catch (err: any) {
+    setError(err.message || 'Error al actualizar. Verifica tus datos.');
+  } finally {
+    setCargando(false);
+  }
+};
 
   return (
     <ScrollView style={estilos.contenedor}>
@@ -124,9 +170,10 @@ export default function PantallaConfiguracion() {
 
             <CampoEntrada
               etiqueta="Nueva Contraseña (opcional)"
-              value={formData.password}
-              onChangeText={(text) => setFormData({...formData, password: text})}
+              value={formData.new_password}
+              onChangeText={(text) => setFormData({...formData, new_password: text})}
               secureTextEntry
+              error={error?.includes('contraseña') ? error : undefined} // Show password-specific errors
             />
 
             <View style={estilos.modalBotones}>
