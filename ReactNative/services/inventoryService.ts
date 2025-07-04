@@ -2,7 +2,7 @@
 // Servicio para gestión de inventario usando helpers API
 import { get, post, put, del } from './api';
 import ApiConstants, { getCategoryUrl, getProductUrl, getTransactionUrl } from '../constants/Api';
-import { Categoria, Producto, Transaccion, ListaProductosResponse, ProductCreateRequest, ProductUpdateRequest } from '../types/inventory'; // Importa ProductCreateRequest
+import { Categoria, Producto, Transaccion, ListaProductosResponse, ProductCreateRequest, ProductUpdateRequest } from '../types/inventory';
 import { AxiosResponse } from 'axios'; // Importa AxiosResponse para tipado
 
 // Obtiene todas las categorías
@@ -108,9 +108,22 @@ export const actualizarProducto = async (
 export const eliminarProducto = async (id: number): Promise<void> => {
   try {
     const url = getProductUrl(id);
-    await del(url);
-  } catch (error) {
-    throw new Error(`Error eliminando producto ${id}: ${(error as Error).message}`);
+    console.log(`[InventoryService] Intentando DELETE a la URL: ${url}`); // Log antes de la llamada
+    const response = await del(url);
+    console.log(`[InventoryService] Respuesta DELETE recibida para ID ${id}. Estado: ${response.status}`); // Log de la respuesta
+    if (response.status !== 200) { // O 204 No Content, dependiendo de tu backend
+        console.warn(`[InventoryService] La eliminación de producto ID ${id} no devolvió un estado 200/204. Estado: ${response.status}`);
+    }
+  } catch (error: any) { // Asegúrate de tipar 'error' para acceder a sus propiedades
+    console.error(`[InventoryService] Error en eliminarProducto para ID ${id}:`, error);
+    // Si el error tiene una respuesta HTTP, intenta extraer el detalle
+    if (error.response && error.response.data && error.response.data.detail) {
+        throw new Error(error.response.data.detail);
+    } else if (error.message) {
+        throw new Error(`Error eliminando producto ${id}: ${error.message}`);
+    } else {
+        throw new Error(`Error desconocido eliminando producto ${id}.`);
+    }
   }
 };
 

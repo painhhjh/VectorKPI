@@ -34,5 +34,10 @@ class ProductRead(ProductBase):
     category: Optional[CategoryRead] = None
     owner_id: int
 
+
+class ProductDelete(BaseModel):
+    id: int
+    owner_id: Optional[int] = None
+
     class Config:
         from_attributes = True

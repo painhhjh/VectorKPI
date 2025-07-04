@@ -183,8 +183,9 @@ def update_product_endpoint(
         if existing_product and existing_product.id != product_id:
             raise HTTPException(status_code=400, detail=f"Product with SKU {product_in.sku} already exists")
     
-    # Pasa el current_user.id al CRUD para que se actualice el owner_id en el modelo
-    # o simplemente para asegurar que el CRUD tenga el contexto del propietario.
+    # Llama a la función CRUD para actualizar el producto.
+    # El owner_id se pasa como argumento para asegurar que la lógica de negocio del CRUD
+    # pueda usarlo si es necesario (aunque ya se filtró en get_product arriba).
     return crud_product.update_product(db=db, db_product=db_product, product_in=product_in, owner_id=current_user.id)
 
 # Endpoint para eliminar un producto
@@ -197,10 +198,18 @@ def delete_product_endpoint(
 ):
     """Elimina un producto."""
     # Intentar eliminar el producto, pasando el owner_id para la verificación de permisos en el CRUD
-    deleted_product = crud_product.delete_product(db=db, product_id=product_id, owner_id=current_user.id)
-    if not deleted_product:
+    # Primero, verifica si el producto existe y pertenece al usuario actual
+    db_product = crud_product.get_product(db, product_id=product_id, owner_id=current_user.id)
+    if not db_product:
         # Si no se encontró o el usuario no tiene permiso para eliminarlo
         raise HTTPException(status_code=404, detail="Product not found or you don't have permission to delete it.")
+        
+    # Si el producto existe y pertenece al usuario, procede con la eliminación
+    deleted_product = crud_product.delete_product(db=db, product_id=product_id, owner_id=current_user.id)
+    # Aunque ya verificamos arriba, esta línea asegura que el retorno sea el objeto eliminado
+    # si el CRUD devuelve None por alguna razón inesperada (ej. otra eliminación concurrente)
+    if not deleted_product:
+        raise HTTPException(status_code=500, detail="Failed to delete product after verification.")
     return deleted_product
 
 # --- Transacciones ---

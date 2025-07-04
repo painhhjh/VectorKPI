@@ -36,6 +36,12 @@ export interface ProductUpdateRequest {
   owner_id?: number;
 }
 
+// Interfaz para la solicitud de eliminación de productos (refleja app/crud/product.py -> delete_product)
+export interface ProductDeleteRequest {
+  id: number; // ID del producto a eliminar
+  owner_id?: number | null; // owner_id es opcional, puede ser null si no se requiere validación
+}
+
 // Interfaz para la estructura del producto leído (refleja app/schemas/product.py -> ProductRead)
 export interface Producto {
   id: number;
