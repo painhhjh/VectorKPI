@@ -1,6 +1,6 @@
 // Configuración centralizada del cliente HTTP (axios) para interactuar con la API
 // Establece la URL base, interceptores para tokens y manejo de errores
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError, AxiosHeaders } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native'; // Importa Platform
 import ApiConstants from '../constants/Api';
@@ -208,9 +208,26 @@ export const put = <T = any>(url: string, data?: any, config?: InternalAxiosRequ
   return clienteApi.put<T>(url, data, config);
 };
 
-export const del = <T = any>(url: string, config?: InternalAxiosRequestConfig): Promise<AxiosResponse<T>> => {
-  return clienteApi.delete<T>(url, config);
-};
+
+//old
+// export const del = <T = any>(url: string, config?: InternalAxiosRequestConfig): Promise<AxiosResponse<T>> => {
+//   return clienteApi.delete<T>(url, config);
+// };
+
+export const del = <T = any>(
+  url: string,
+  data?: any,  // Explicit data parameter
+  config?: Omit<InternalAxiosRequestConfig, 'data'>  // Config without data
+): Promise<AxiosResponse<T>> => {
+  return clienteApi.delete<T>(url, {
+    ...config,
+    data,  // Properly typed data
+    headers: new AxiosHeaders({
+      ...config?.headers,
+      'Content-Type': 'application/json'
+    })
+  });
+}
 
 
 export default clienteApi;

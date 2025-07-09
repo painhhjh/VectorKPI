@@ -105,28 +105,42 @@ export const actualizarProducto = async (
   }
 };
 
-export const eliminarProducto = async (id: number): Promise<void> => {
+//la version que no servia
+// export const eliminarProducto = async (id: number): Promise<void> => {
+//   try {
+//     const url = getProductUrl(id);
+//     console.log(`[InventoryService] Intentando DELETE a la URL: ${url}`); // Log antes de la llamada
+//     const response = await del(url);
+//     console.log(`[InventoryService] Respuesta DELETE recibida para ID ${id}. Estado: ${response.status}`); // Log de la respuesta
+//     if (response.status !== 200) { // O 204 No Content, dependiendo de tu backend
+//         console.warn(`[InventoryService] La eliminación de producto ID ${id} no devolvió un estado 200/204. Estado: ${response.status}`);
+//     }
+//   } catch (error: any) { // Asegúrate de tipar 'error' para acceder a sus propiedades
+//     console.error(`[InventoryService] Error en eliminarProducto para ID ${id}:`, error);
+//     // Si el error tiene una respuesta HTTP, intenta extraer el detalle
+//     if (error.response && error.response.data && error.response.data.detail) {
+//         throw new Error(error.response.data.detail);
+//     } else if (error.message) {
+//         throw new Error(`Error eliminando producto ${id}: ${error.message}`);
+//     } else {
+//         throw new Error(`Error desconocido eliminando producto ${id}.`);
+//     }
+//   }
+// };
+
+export const eliminarProducto = async (id: number, ownerId: number): Promise<void> => {
   try {
     const url = getProductUrl(id);
-    console.log(`[InventoryService] Intentando DELETE a la URL: ${url}`); // Log antes de la llamada
-    const response = await del(url);
-    console.log(`[InventoryService] Respuesta DELETE recibida para ID ${id}. Estado: ${response.status}`); // Log de la respuesta
-    if (response.status !== 200) { // O 204 No Content, dependiendo de tu backend
-        console.warn(`[InventoryService] La eliminación de producto ID ${id} no devolvió un estado 200/204. Estado: ${response.status}`);
-    }
-  } catch (error: any) { // Asegúrate de tipar 'error' para acceder a sus propiedades
-    console.error(`[InventoryService] Error en eliminarProducto para ID ${id}:`, error);
-    // Si el error tiene una respuesta HTTP, intenta extraer el detalle
-    if (error.response && error.response.data && error.response.data.detail) {
-        throw new Error(error.response.data.detail);
-    } else if (error.message) {
-        throw new Error(`Error eliminando producto ${id}: ${error.message}`);
-    } else {
-        throw new Error(`Error desconocido eliminando producto ${id}.`);
-    }
+    // Correct way to send data with DELETE request
+    await del(url, { 
+      data: { owner_id: ownerId },  // Request payload
+      headers: { 'Content-Type': 'application/json' }  // Required headers
+    });
+  } catch (error) {
+    console.error('[InventoryService] Delete failed:', error);
+    throw error;
   }
-};
-
+}
 // Transacciones
 
 export const obtenerTransacciones = async (

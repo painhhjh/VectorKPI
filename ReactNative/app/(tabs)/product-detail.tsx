@@ -18,6 +18,7 @@ export default function PantallaDetalleProducto() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter(); // Inicializa el router
   const { usuario } = useAuth(); // Obtiene el usuario autenticado para owner_id
+  const userId = Number(usuario?.id);
 
   const [producto, setProducto] = useState<Producto | null>(null);
   const [estadoCarga, setEstadoCarga] = useState<EstadoCarga>('idle');
@@ -148,42 +149,53 @@ export default function PantallaDetalleProducto() {
   };
 
   // Función para manejar la eliminación del producto
-  const handleDeleteProduct = () => {
-    if (!producto || !usuario?.id) {
-      Alert.alert('Error', 'No se pudo obtener la información del producto o del usuario.');
-      return;
-    }
+  // const handleDeleteProduct = () => {
+  //   if (!producto || !usuario?.id) {
+  //     Alert.alert('Error', 'No se pudo obtener la información del producto o del usuario.');
+  //     return;
+  //   }
 
-    console.log(`[ProductDetail] Intentando eliminar producto con ID: ${producto.id}`);
-    console.log(`[ProductDetail] Propietario del producto: ${producto.owner_id}`);
-    console.log(`[ProductDetail] ID del usuario autenticado: ${usuario.id}`);
+  //   console.log(`[ProductDetail] Intentando eliminar producto con ID: ${producto.id}`);
+  //   console.log(`[ProductDetail] Propietario del producto: ${producto.owner_id}`);
+  //   console.log(`[ProductDetail] ID del usuario autenticado: ${usuario.id}`);
 
 
-    Alert.alert(
-      'Eliminar Producto',
-      `¿Estás seguro de que deseas eliminar "${producto.name}"? Esta acción no se puede deshacer.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // owner_id se pasa para la verificación de permisos en el backend
-              console.log(`[ProductDetail] Confirmado eliminar producto ID: ${producto.id}`);
-              await eliminarProducto(producto.id); // La función CRUD ya usa owner_id del token
-              console.log(`[ProductDetail] Producto eliminado exitosamente en el backend.`);
-              Alert.alert('Producto Eliminado', 'El producto ha sido eliminado exitosamente.');
-              router.replace('/(tabs)/inventory'); // Navegar de vuelta a la lista de inventario
-            } catch (err: any) {
-              console.error('[ProductDetail] Error eliminando producto:', err);
-              Alert.alert('Error', err.message || 'No se pudo eliminar el producto.');
-            }
-          },
-        },
-      ]
-    );
-  };
+  //   Alert.alert(
+  //     'Eliminar Producto',
+  //     `¿Estás seguro de que deseas eliminar "${producto.name}"? Esta acción no se puede deshacer.`,
+  //     [
+  //       { text: 'Cancelar', style: 'cancel' },
+  //       {
+  //         text: 'Eliminar',
+  //         style: 'destructive',
+  //         onPress: async () => {
+  //           try {
+  //             // owner_id se pasa para la verificación de permisos en el backend
+  //             console.log(`[ProductDetail] Confirmado eliminar producto ID: ${producto.id}`);
+  //             await eliminarProducto(producto.id); // La función CRUD ya usa owner_id del token
+  //             console.log(`[ProductDetail] Producto eliminado exitosamente en el backend.`);
+  //             Alert.alert('Producto Eliminado', 'El producto ha sido eliminado exitosamente.');
+  //             router.replace('/(tabs)/inventory'); // Navegar de vuelta a la lista de inventario
+  //           } catch (err: any) {
+  //             console.error('[ProductDetail] Error eliminando producto:', err);
+  //             Alert.alert('Error', err.message || 'No se pudo eliminar el producto.');
+  //           }
+  //         },
+  //       },
+  //     ]
+  //   );
+  // };
+
+  const handleDeleteProduct = async () => {
+  if (!producto || !usuario?.id) return;
+  
+  try {
+    await eliminarProducto(producto.id, userId); // Pass both IDs
+    router.replace('/(tabs)/inventory');
+  } catch (error) {
+    console.log(error)
+  }
+}
 
   // Renderizado condicional
   if (estadoCarga === 'cargando' || estadoCarga === 'idle') {
