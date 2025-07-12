@@ -5,7 +5,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Alert } from 'react-native'; // Añadido Alert para mensajes
 import { useFocusEffect, useRouter } from 'expo-router';
-import { obtenerProductos, obtenerCategorias, crearProducto } from '../../services/inventoryService';
+import { obtenerProductos, obtenerCategorias, crearProducto, crearCategoria } from '../../services/inventoryService';
 import { Producto, Categoria, ProductCreateRequest, ListaProductosResponse } from '../../types/inventory'; // Importa ProductCreateRequest
 import IndicadorCarga from '../../components/Common/LoadingIndicator';
 import MensajeError from '../../components/Common/ErrorMessage';
@@ -14,6 +14,7 @@ import Colors from '../../constants/Colors';
 import Layout from '../../constants/Layout';
 import { Picker } from '@react-native-picker/picker'; // Importa Picker
 import { useAuth } from '../../contexts/useAuth'; // Importa useAuth para obtener el ID del usuario
+import CampoEntrada from '@/components/Common/InputField';
 
 // Define los posibles estados de carga de datos.
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
@@ -46,6 +47,11 @@ export default function PantallaInventario() {
 
   // Estado para el modal de selección de categoría.
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+    // estados para el modal de creación de categorías
+  const [modalCrearCategoriaVisible, setModalCrearCategoriaVisible] = useState(false);
+  const [nuevaCategoria, setNuevaCategoria] = useState({ name: '', description: '' });
+  const [creandoCategoria, setCreandoCategoria] = useState(false);
+  const [errorCrearCategoria, setErrorCrearCategoria] = useState<string | null>(null);
 
   // --- FUNCIONES ---
 
@@ -181,6 +187,71 @@ export default function PantallaInventario() {
     }
   };
 
+  // función que maneja la creación de una nueva categoría
+  const handleCrearNuevaCategoria = async () => {
+    setErrorCrearCategoria(null);
+    setCreandoCategoria(true);
+
+
+    // Validación del formulario
+    if (!nuevaCategoria.name || nuevaCategoria.name.trim().length < 2) {
+      setErrorCrearCategoria("El nombre de la categoría es obligatorio y debe tener al menos 2 caracteres.");
+      setCreandoCategoria(false);
+
+      return;
+    }
+    if (nuevaCategoria.description && nuevaCategoria.description.length > 500) {
+      setErrorCrearCategoria("La descripción no puede exceder los 500 caracteres.");
+      setCreandoCategoria(false);
+
+
+      return;
+    }
+
+    try {
+      // Llama al servicio para crear la categoría
+      const createdCategory = await crearCategoria({
+        ...nuevaCategoria
+      });
+      console.log("Categoría creada:", createdCategory);
+
+      // 1. Cerrar automáticamente el modal de creación
+      setModalCrearCategoriaVisible(false);
+      // 2. Actualizar la lista de categorías
+      await cargarDatos();
+      // 3. Preseleccionar automáticamente la nueva categoría en el formulario de producto
+      // setNuevoProducto(prev => ({
+      //   ...prev,
+      //   category_id: createdCategory.id
+      // }));
+      // 4. Retornar al modal de selección con la nueva categoría disponible
+      // Esto solo es necesario si el flujo deseado es regresar al selector de categorías.
+      // Si el botón de "Crear Categoría" está ahora en la pantalla principal,
+      // el usuario podría no esperar volver al selector automáticamente.
+      // setShowCategoryModal(true); // Descomentar si el flujo lo requiere.
+
+      // Limpiar el formulario
+      setNuevaCategoria({ name: '', description: '' });
+      Alert.alert("Éxito", `Categoría "${createdCategory.name}" creada correctamente.`);
+
+
+
+
+
+    } catch (err: any) {
+      console.error("Error al crear categoría:", err);
+      // Extrae el mensaje de error del backend si está disponible
+      let errorMessage = "Error al crear la categoría. Intente de nuevo.";
+      if (err.message) {
+          // Asumiendo que el interceptor de Axios ya formatea el error.message
+          errorMessage = err.message;
+      }
+      setErrorCrearCategoria(errorMessage);
+    } finally {
+      setCreandoCategoria(false);
+    }
+  };
+
   // --- RENDERIZADO CONDICIONAL ---
 
   // Muestra indicador de carga mientras se obtienen datos.
@@ -199,13 +270,23 @@ export default function PantallaInventario() {
       <Text style={estilos.tituloPlaceholder}>Módulo de Inventario</Text>
       <Text style={estilos.subtituloPlaceholder}>Lista de Productos</Text>
 
+     <View style={estilos.mainActionButtonsContainer}>
       {/* Botón para abrir el modal de añadir producto */}
       <Boton
         titulo="Añadir Producto"
         onPress={abrirModal}
         variante="primario"
-        estiloContenedor={{ marginBottom: Layout.spacing.medium }}
+        estiloContenedor={estilos.mainActionButton}
       />
+      {/* BOTÓN: Crear Categoría en la pantalla principal */}
+        <Boton
+          titulo="Crear Categoría"
+          onPress={() => setModalCrearCategoriaVisible(true)}
+          variante="secundario"
+          estiloContenedor={estilos.mainActionButton}
+        />
+    </View> 
+      
 
       {/* Lista principal de productos */}
       <FlatList
@@ -218,6 +299,52 @@ export default function PantallaInventario() {
         contentContainerStyle={{ paddingBottom: Layout.spacing.large }}
       />
       {error && productos.length > 0 && <MensajeError mensaje={error} />}
+
+            {/* Modal para seleccionar la categoría (separado para mejor UX) */}
+      <Modal
+        visible={showCategoryModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCategoryModal(false)}
+      >
+        <View style={estilos.categoryModalOverlay}>
+          <View style={estilos.modalContenidoCategoria}>
+            <Text style={estilos.modalTitulo}>Seleccionar Categoría</Text>
+            {estadoCargaCat === 'error' ? (
+              <Text style={estilos.textoModalInformativo}>Error al cargar categorías.</Text>
+            ) : categorias.length === 0 ? (
+              <Text style={estilos.textoModalInformativo}>No hay categorías disponibles.</Text>
+            ) : (
+              <FlatList
+                data={categorias}
+                keyExtractor={(item: Categoria) => item.id.toString()}
+                renderItem={({ item }: { item: Categoria }) => (
+                  <TouchableOpacity
+                    style={[
+                      estilos.itemCategoriaModal,
+                      selectedCategoryId === item.id && estilos.itemCategoriaSeleccionada
+                    ]}
+                    onPress={() => {
+                      setSelectedCategoryId(item.id);
+                      setShowCategoryModal(false);
+                    }}
+                  >
+                    <Text style={{ color: selectedCategoryId === item.id ? Colors.primary : Colors.text }}>
+                      {item.name}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            <TouchableOpacity
+              style={estilos.botonCerrarModalCategoria}
+              onPress={() => setShowCategoryModal(false)}
+            >
+              <Text style={{ color: Colors.textSecondary, fontWeight: 'bold' }}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal para crear un nuevo producto */}
       <Modal
@@ -315,48 +442,64 @@ export default function PantallaInventario() {
         </View>
       </Modal>
 
-      {/* Modal para seleccionar la categoría (separado para mejor UX) */}
+
+
+
+       {/* Modal para CREAR NUEVA Categoría (este es un modal diferente) */}
       <Modal
-        visible={showCategoryModal}
+        visible={modalCrearCategoriaVisible}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setShowCategoryModal(false)}
+        onRequestClose={() => {
+          setModalCrearCategoriaVisible(false);
+          setErrorCrearCategoria(null); // Limpiar errores al cerrar
+          setNuevaCategoria({ name: '', description: '' }); // Limpiar formulario al cerrar
+        }}
       >
-        <View style={estilos.categoryModalOverlay}>
-          <View style={estilos.modalContenidoCategoria}>
-            <Text style={estilos.modalTitulo}>Seleccionar Categoría</Text>
-            {estadoCargaCat === 'error' ? (
-              <Text style={estilos.textoModalInformativo}>Error al cargar categorías.</Text>
-            ) : categorias.length === 0 ? (
-              <Text style={estilos.textoModalInformativo}>No hay categorías disponibles.</Text>
-            ) : (
-              <FlatList
-                data={categorias}
-                keyExtractor={(item: Categoria) => item.id.toString()}
-                renderItem={({ item }: { item: Categoria }) => (
-                  <TouchableOpacity
-                    style={[
-                      estilos.itemCategoriaModal,
-                      selectedCategoryId === item.id && estilos.itemCategoriaSeleccionada
-                    ]}
-                    onPress={() => {
-                      setSelectedCategoryId(item.id);
-                      setShowCategoryModal(false);
-                    }}
-                  >
-                    <Text style={{ color: selectedCategoryId === item.id ? Colors.primary : Colors.text }}>
-                      {item.name}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-            <TouchableOpacity
-              style={estilos.botonCerrarModalCategoria}
-              onPress={() => setShowCategoryModal(false)}
-            >
-              <Text style={{ color: Colors.textSecondary, fontWeight: 'bold' }}>Cerrar</Text>
-            </TouchableOpacity>
+        <View style={estilos.modalOverlay}>
+          <View style={estilos.modalContenidoCrearCategoria}>
+            <Text style={estilos.modalTitulo}>Crear Nueva Categoría</Text>
+
+            <CampoEntrada
+              etiqueta="Nombre de la Categoría"
+              placeholder="Ej: Perforación, Logística"
+              value={nuevaCategoria.name}
+              onChangeText={(text) => setNuevaCategoria({ ...nuevaCategoria, name: text })}
+              error={errorCrearCategoria && nuevaCategoria.name.trim().length < 2 ? errorCrearCategoria : undefined}
+              style={estilos.input}
+            />
+            <CampoEntrada
+              etiqueta="Descripción (opcional)"
+              placeholder="Breve descripción de la categoría"
+              value={nuevaCategoria.description}
+              onChangeText={(text) => setNuevaCategoria({ ...nuevaCategoria, description: text })}
+              multiline
+              numberOfLines={4}
+              error={errorCrearCategoria && nuevaCategoria.description && nuevaCategoria.description.length > 500 ? errorCrearCategoria : undefined}
+              style={[estilos.input, estilos.descriptionInput]}
+            />
+
+            {errorCrearCategoria && <MensajeError mensaje={errorCrearCategoria} estiloContenedor={estilos.formError} />}
+
+            <View style={estilos.modalBotonesContenedor}>
+                <Boton
+                  titulo="Cancelar"
+                  onPress={() => {
+                    setModalCrearCategoriaVisible(false);
+                    setErrorCrearCategoria(null);
+                    setNuevaCategoria({ name: '', description: '' });
+                  }}
+                  variante="secundario"
+                  estiloContenedor={estilos.botonModal}
+                />
+                <Boton
+                  titulo={creandoCategoria ? "Creando..." : "Crear Categoría"}
+                  onPress={handleCrearNuevaCategoria}
+                  deshabilitado={creandoCategoria || nuevaCategoria.name.trim().length < 2}
+                  cargando={creandoCategoria}
+                  estiloContenedor={estilos.botonModal}
+                />
+            </View>
           </View>
         </View>
       </Modal>
@@ -505,5 +648,39 @@ const estilos = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Layout.fontSize.body,
     marginTop: Layout.spacing.medium,
+  },
+  modalContenidoCrearCategoria: {
+    backgroundColor: Colors.white,
+    padding: Layout.spacing.large,
+    borderRadius: Layout.borderRadius.medium,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  botonModal: {
+    flex: 1,
+    marginHorizontal: Layout.spacing.tiny,
+  },
+  descriptionInput: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  formError: {
+    marginBottom: Layout.spacing.medium,
+    width: '100%',
+  },
+  mainActionButton: {
+    flex: 1,
+    marginHorizontal: Layout.spacing.tiny,
+  },
+  mainActionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: Layout.spacing.medium,
+    gap: Layout.spacing.small,
   },
 });
