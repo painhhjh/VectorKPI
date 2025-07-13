@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, Stack, useRouter } from 'expo-router'; // Hooks de Expo Router
+import { useLocalSearchParams, Stack, useRouter, useFocusEffect } from 'expo-router'; // Hooks de Expo Router
 import { normalizarKpi, obtenerDetalleKpi } from '../../services/kpiService';
 import KpiChart from '../../components/KPI/KpiChart';
 import IndicadorCarga from '../../components/Common/LoadingIndicator';
@@ -18,18 +18,18 @@ import ApiConstants from '@/constants/Api';
 type EstadoCarga = 'idle' | 'cargando' | 'exito' | 'error';
 
 // Función para generar datos de gráfico simulados (¡REEMPLAZAR CON DATOS REALES!)
-const generarDatosSimulados = (valorActual: number): { fecha: Date; valor: number }[] => {
-    const datos: { fecha: Date; valor: number }[] = [];
-    const hoy = new Date();
-    for (let i = 10; i >= 0; i--) { // Genera 11 puntos (hoy y 10 días atrás)
-        const fecha = new Date(hoy);
-        fecha.setDate(hoy.getDate() - i);
-        // Simula una variación aleatoria alrededor del valor actual
-        const variacion = (Math.random() - 0.5) * valorActual * 0.1; // +/- 5%
-        datos.push({ fecha, valor: parseFloat((valorActual + variacion).toFixed(2)) });
-    }
-    return datos;
-};
+// const generarDatosSimulados = (valorActual: number): { fecha: Date; valor: number }[] => {
+//     const datos: { fecha: Date; valor: number }[] = [];
+//     const hoy = new Date();
+//     for (let i = 10; i >= 0; i--) { // Genera 11 puntos (hoy y 10 días atrás)
+//         const fecha = new Date(hoy);
+//         fecha.setDate(hoy.getDate() - i);
+//         // Simula una variación aleatoria alrededor del valor actual
+//         const variacion = (Math.random() - 0.5) * valorActual * 0.1; // +/- 5%
+//         datos.push({ fecha, valor: parseFloat((valorActual + variacion).toFixed(2)) });
+//     }
+//     return datos;
+// };
 
 
 export default function PantallaDetalleKpi() {
@@ -59,10 +59,22 @@ export default function PantallaDetalleKpi() {
   }
 }, []);
 
+
   // Cargar todos los KPIs al montar el componente
   useEffect(() => {
     cargarTodosKpis();
   }, []);
+
+  //Recargar KPIs al abrir el componente de nuevo
+useFocusEffect(
+  useCallback(() => {
+    const reloadData = async () => {
+      await cargarTodosKpis(); // Re-fetch ALL KPIs first
+      if (id) cargarDetalle(); // Then load detail
+    };
+    reloadData();
+  }, [id])
+);
 
   // Función para cargar los detalles del KPI
   const cargarDetalle = useCallback(async () => {
@@ -91,7 +103,8 @@ export default function PantallaDetalleKpi() {
         fecha: new Date(k.last_updated),
         valor: k.value
       }));
-      
+
+      console.log("Data para el graifco:", datosReales); // Verify freshness
       setDatosGrafico(datosReales);
       setEstadoCarga('exito');
       console.log(`[KpiDetail] Detalle cargado para: ${detalle.name}`);
@@ -155,14 +168,11 @@ export default function PantallaDetalleKpi() {
 
       {/* Renderiza el gráfico con los datos REALES */}
       <KpiChart
+        key={`${kpi.id}`}
         datos={datosGrafico}
         nombreKpi={kpi.name}
         unidad={kpi.unit}
       />
-
-      {/* Podrías añadir aquí botones para editar/eliminar si tienes permisos */}
-      {/* <Boton titulo="Editar" onPress={() => {}} variante="secundario" /> */}
-      {/* <Boton titulo="Eliminar" onPress={() => {}} variante="peligro" /> */}
 
     </ScrollView>
   );

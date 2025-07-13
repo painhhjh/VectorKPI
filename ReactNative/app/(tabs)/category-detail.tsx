@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { KpiCategory, KPI } from '../../types';
 import { obtenerKpis } from '../../services/kpiService';
 import IndicadorCarga from '../../components/Common/LoadingIndicator';
@@ -23,9 +23,12 @@ export default function CategoryDetailScreen() {
   const { usuario } = useAuth();
   const userId = Number(usuario?.id);   
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
+   useEffect(() => {
+    loadData();
+  }, []);
+
+const loadData = useCallback(async () => {
+try {
         setLoading(true);
         const response = await obtenerKpis();
         const kpis = response.results;
@@ -46,10 +49,14 @@ export default function CategoryDetailScreen() {
       } finally {
         setLoading(false);
       }
-    };
-
-    loadData();
   }, [category]);
+
+    useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+
 
   const prepareChartData = (kpis: KPI[]) => {
   return {
@@ -121,6 +128,7 @@ export default function CategoryDetailScreen() {
     >
         <View style={styles.chartWrapper}>
     <BarChart 
+      key={`category-chart-${category}-${filteredKpis.length}`}
       data={prepareChartData(filteredKpis)}
       width={Math.max(
           screenWidth * 0.9, // Base width
