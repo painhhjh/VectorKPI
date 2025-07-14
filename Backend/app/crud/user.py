@@ -124,3 +124,11 @@ def update_profile(db: Session, *, db_profile: Profile, profile_in: ProfileUpdat
     db.commit()
     db.refresh(db_profile)
     return db_profile
+
+def update_password(db: Session, user: User, new_password: str) -> User:
+    """Actualiza la contraseña de un usuario."""
+    user.hashed_password = get_password_hash(new_password)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user

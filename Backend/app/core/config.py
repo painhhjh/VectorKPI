@@ -2,6 +2,7 @@ import os
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from typing import Optional
+from pydantic import EmailStr
 
 # Carga las variables de entorno desde el archivo .env
 load_dotenv()
@@ -31,23 +32,17 @@ class Settings(BaseSettings):
     # Para desarrollo con Expo Go, podrías necesitar http://localhost:8081 o tu IP local
     BACKEND_CORS_ORIGINS: list[str] = os.getenv("BACKEND_CORS_ORIGINS", "*").split(",")
 
-    # --- Configuración de Email (Ejemplo - AJUSTAR SEGÚN TU PROVEEDOR) ---
-    # Esto debería ir idealmente en config.py o ser cargado desde .env
-    # Asegúrate de tener variables de entorno como MAIL_USERNAME, MAIL_PASSWORD, etc.
-    # if settings.EMAILS_ENABLED: # Considera usar una bandera en settings
-    #     email_conf = ConnectionConfig(
-    #           MAIL_USERNAME = settings.MAIL_USERNAME, # Usar settings
-    #           MAIL_PASSWORD = settings.MAIL_PASSWORD, # Usar settings
-    #           MAIL_FROM = EmailStr(settings.MAIL_FROM), # Usar settings y validar
-    #           MAIL_PORT = settings.MAIL_PORT, # Usar settings
-    #           MAIL_SERVER = settings.MAIL_SERVER, # Usar settings
-    #           MAIL_STARTTLS = settings.MAIL_STARTTLS, # Usar settings
-    #           MAIL_SSL_TLS = settings.MAIL_SSL_TLS, # Usar settings
-    #           USE_CREDENTIALS = settings.USE_CREDENTIALS, # Usar settings
-    #           VALIDATE_CERTS = settings.VALIDATE_CERTS # Usar settings
-    #     )
-    #     fm = FastMail(email_conf)
-    # --------------------------------------------------------------------
+    # Configuración de Email (para Brevo)
+    EMAILS_ENABLED: bool = os.getenv("EMAILS_ENABLED", "True").lower() == "true"
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
+    MAIL_FROM: EmailStr = os.getenv("MAIL_FROM", "no-reply@vectorkpi.com")  # Email remitente verificado en Brevo
+    MAIL_PORT: int = int(os.getenv("MAIL_PORT", "587"))
+    MAIL_SERVER: str = os.getenv("MAIL_SERVER", "smtp-relay.brevo.com")
+    MAIL_STARTTLS: bool = os.getenv("MAIL_STARTTLS", "True").lower() == "true"
+    MAIL_SSL_TLS: bool = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
+    USE_CREDENTIALS: bool = os.getenv("USE_CREDENTIALS", "True").lower() == "true"
+    VALIDATE_CERTS: bool = os.getenv("VALIDATE_CERTS", "True").lower() == "true"
 
 
     class Config:

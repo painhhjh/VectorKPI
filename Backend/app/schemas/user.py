@@ -1,3 +1,4 @@
+# backend/app/schemas/user.py
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 import datetime
@@ -56,3 +57,13 @@ class UserRead(UserBase):
 class UserInDB(UserRead):
     """Schema que incluye la contraseña hasheada (para uso interno)."""
     hashed_password: str
+
+# --- NUEVOS Esquemas para Restablecimiento de Contraseña ---
+class PasswordResetRequest(BaseModel):
+    """Esquema para la solicitud de recuperación de contraseña (solo email)."""
+    email: EmailStr = Field(..., example="user@example.com")
+
+class UserPasswordReset(BaseModel):
+    """Esquema para el restablecimiento de contraseña (token y nueva contraseña)."""
+    token: str = Field(..., example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    new_password: str = Field(..., min_length=8, example="VerySecureNewPassword123")

@@ -65,5 +65,5 @@ def read_root():
     return {"message": f"Bienvenido a {settings.PROJECT_NAME} API"}
 
 # Comando para ejecutar:
-# uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+# uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 # --host 0.0.0.0 permite conexiones desde otras máquinas en tu red local (útil para Expo Go)

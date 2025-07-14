@@ -1,3 +1,4 @@
+# backend/app/api/v1/endpoints/auth.py
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -9,7 +10,7 @@ from app.crud import user as crud_user
 from app.security import core as security_core
 from app.api.dependencies import ActiveUser, DbSession # Usamos los alias definidos
 from app.models.user import User # Necesario para el tipo de ActiveUser
-from app.schemas.user import UserRead # Para el endpoint de test
+from app.schemas.user import UserRead, PasswordResetRequest, UserPasswordReset # Importa los nuevos esquemas
 
 router = APIRouter()
 
@@ -52,16 +53,16 @@ def test_token(current_user: ActiveUser):
     return current_user
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", response_model=dict[str, str]) # Define el tipo de respuesta
 async def forgot_password(
-    email: Annotated[str, Body(..., embed=True)],
-    db: Annotated[Session, Depends(get_db)]  # Usando Annotated para Depends
+    request: PasswordResetRequest, # Usa el esquema para el email
+    db: Annotated[Session, Depends(get_db)]
 ) -> Any:
     """
     Endpoint para solicitar recuperación de contraseña.
     Recibe el email del usuario y envía un email con instrucciones.
     """
-    user = crud_user.get_user_by_email(db, email=email)
+    user = crud_user.get_user_by_email(db, email=request.email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -71,20 +72,19 @@ async def forgot_password(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
 
     await security_core.send_password_reset_email(email=user.email)
-    return {"msg": "Password reset email sent"}
+    return {"message": "Password reset email sent"} # Cambiado a 'message' para consistencia con frontend
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", response_model=dict[str, str]) # Define el tipo de respuesta
 async def reset_password(
-    token: Annotated[str, Body(..., embed=True)],
-    new_password: Annotated[str, Body(..., embed=True)],
-    db: Annotated[Session, Depends(get_db)]  # Sin "= Depends()"
+    user_password_reset: UserPasswordReset, # Usa el nuevo esquema
+    db: Annotated[Session, Depends(get_db)]
 ) -> Any:
     """
     Endpoint para cambiar la contraseña.
     Recibe un token de recuperación y la nueva contraseña.
     """
-    email = security_core.verify_password_reset_token(token)
+    email = security_core.verify_password_reset_token(user_password_reset.token)
     if not email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -96,6 +96,19 @@ async def reset_password(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user.",
+        )
+    
+    # Asegúrate de que esta función exista en crud_user.py
+    # crud_user.update_password(db, user, user_password_reset.new_password)
+    # Implementación directa si no tienes update_password en crud_user:
+    hashed_password = security_core.get_password_hash(user_password_reset.new_password)
+    user.hashed_password = hashed_password
+    db.add(user)
+    db.commit()
+    db.refresh(user) # Refresca el objeto usuario para asegurar que los cambios se reflejen
 
-    crud_user.update_password(db, user, new_password)
-    return {"msg": "Password updated successfully"}
+    return {"message": "Password updated successfully"} # Cambiado a 'message'

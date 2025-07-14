@@ -4,15 +4,15 @@
 import { post, get, put } from './api';
 import ApiConstants from '../constants/Api';
 import { Usuario, TokenResponse } from '../types';
-import { AxiosHeaders } from 'axios'; // Quitamos 'axios' si no se usa directamente aquí
-import { Platform } from 'react-native'; // Necesario para la lógica de almacenamiento
+import { AxiosHeaders } from 'axios';
+import { Platform } from 'react-native';
 
-// Tipos (Asegúrate que RespuestaRegistro esté definida o impórtala si es necesario)
+// Tipos
 interface DatosRegistro {
   email: string;
   password: string;
   profile: {
-    full_name: string; // Nested under 'profile'
+    full_name: string;
   };
 }
 
@@ -25,7 +25,7 @@ interface RespuestaRegistro {
   id: number;
   email: string;
   profile: {
-    full_name: string; // Reflects the backend response
+    full_name: string;
   };
   is_active: boolean;
   created_at: string;
@@ -43,33 +43,28 @@ interface DatosActualizacionUsuario {
 export const actualizarUsuario = async (datos: DatosActualizacionUsuario): Promise<Usuario> => {
   try {
     const { data } = await put<Usuario>(ApiConstants.USER_ME, datos);
-    console.log("this one",data)
+    console.log("Usuario actualizado:", data);
     return data;
   } catch (error: any) {
     console.error('[AuthService] Error al actualizar usuario:', error);
-    throw new Error(error.message || 'Error al actualizar perfil');
+    // Manejo de errores
+    throw new Error(error.response?.data?.detail || 'Error al actualizar perfil');
   }
 };
 
-// --- Funciones Helper para construir URL (alternativa) ---
+// --- Funciones Helper para construir URL (se mantiene como referencia) ---
 const buildUrl = (endpoint: string): string => {
-  // Asegura que no haya doble barra si endpoint empieza con /
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-  // Asegura que BASE_URL no termine en / y une con /
   const cleanBaseUrl = ApiConstants.BASE_URL.endsWith('/')
     ? ApiConstants.BASE_URL.slice(0, -1)
     : ApiConstants.BASE_URL;
   return `${cleanBaseUrl}/${cleanEndpoint}`;
 };
-// Nota: Axios maneja esto automáticamente si baseURL está bien configurada.
-// El problema anterior era probable por cómo se logueaba o un error en baseURL/constantes.
-// Mantendremos el paso de rutas relativas a axios por ahora.
 
 // Funciones principales
-
 export const iniciarSesion = async (credenciales: DatosLogin): Promise<TokenResponse> => {
-  const url = ApiConstants.AUTH_LOGIN; // Ruta relativa
-  console.log(`[AuthService] Iniciando sesión para: ${credenciales.email} en ${ApiConstants.BASE_URL}/${url}`); // Log con URL completa
+  const url = ApiConstants.AUTH_LOGIN;
+  console.log(`[AuthService] Iniciando sesión para: ${credenciales.email} en ${ApiConstants.BASE_URL}${url}`);
   try {
     const params = new URLSearchParams();
     params.append('username', credenciales.email);
@@ -78,57 +73,58 @@ export const iniciarSesion = async (credenciales: DatosLogin): Promise<TokenResp
     const { data } = await post<TokenResponse>(
       url,
       params,
+      {
+        headers: new AxiosHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
+      }
     );
 
     console.log('[AuthService] Login exitoso, token recibido.');
     return data;
 
   } catch (error: any) {
-    console.error(`[AuthService] Error en iniciarSesion (${url}):`, error.message || error);
-    throw new Error(error.message || 'Error de conexión o al intentar iniciar sesión.');
+    console.error(`[AuthService] Error en iniciarSesion:`, error.message || error);
+    throw new Error(error.response?.data?.detail || 'Error de conexión o al iniciar sesión');
   }
 };
 
 export const obtenerUsuarioActual = async (): Promise<Usuario> => {
-  const url = ApiConstants.USER_ME; // Ruta relativa
-  console.log(`[AuthService] Obteniendo usuario actual desde ${ApiConstants.BASE_URL}/${url}...`);
+  const url = ApiConstants.USER_ME;
+  console.log(`[AuthService] Obteniendo usuario actual desde ${ApiConstants.BASE_URL}${url}...`);
   try {
     const { data } = await get<Usuario>(url);
     console.log('[AuthService] Datos de usuario obtenidos:', data.email);
-    // TODO: Mapear data a la interfaz Usuario si es necesario (ej. is_active -> isActive)
-    return data as Usuario; // Asumimos que coincide por ahora
+    return data as Usuario;
   } catch (error: any) {
-    console.error(`[AuthService] Error al obtener usuario actual (${url}):`, error.message || error);
-    throw new Error(error.message || 'No se pudieron obtener los datos del usuario.');
+    console.error(`[AuthService] Error al obtener usuario actual:`, error.message || error);
+    throw new Error(error.response?.data?.detail || 'No se pudieron obtener los datos del usuario');
   }
 };
 
 export const registrarUsuario = async (
   datosRegistro: DatosRegistro
 ): Promise<RespuestaRegistro> => {
-  const url = ApiConstants.USER; // Ruta relativa
-  console.log(`[AuthService] Registrando usuario: ${datosRegistro.email} en ${ApiConstants.BASE_URL}/${url}`);
+  const url = ApiConstants.USER;
+  console.log(`[AuthService] Registrando usuario: ${datosRegistro.email} en ${ApiConstants.BASE_URL}${url}`);
   try {
-    console.log("este es datosRegistro antes de que se envie:", datosRegistro)
     const { data } = await post<RespuestaRegistro>(
       url,
-      datosRegistro // Envía JSON
+      datosRegistro
     );
     console.log('[AuthService] Registro exitoso para:', datosRegistro.email);
     return data;
   } catch (error: any) {
-    console.error(`[AuthService] Error en registrarUsuario (${url}):`, error.message || error);
-    throw new Error(error.message || 'Ocurrió un error durante el registro.');
+    console.error(`[AuthService] Error en registrarUsuario:`, error.message || error);
+    throw new Error(error.response?.data?.detail || 'Error durante el registro');
   }
 };
 
 export const solicitarRecuperacionPassword = async (email: string): Promise<{ msg: string }> => {
-  const url = ApiConstants.AUTH_FORGOT_PASSWORD; // Ruta relativa
-  console.log(`[AuthService] Solicitando recuperación para: ${email} en ${ApiConstants.BASE_URL}/${url}`);
+  const url = ApiConstants.AUTH_FORGOT_PASSWORD;
+  console.log(`[AuthService] Solicitando recuperación para: ${email} en ${ApiConstants.BASE_URL}${url}`);
   try {
     const { data } = await post<{ msg: string }>(
       url,
-      { email: email }, // Envía JSON
+      { email: email },
       {
         headers: new AxiosHeaders({ 'Content-Type': 'application/json' })
       }
@@ -136,8 +132,8 @@ export const solicitarRecuperacionPassword = async (email: string): Promise<{ ms
     console.log('[AuthService] Solicitud de recuperación enviada con éxito.');
     return data;
   } catch (error: any) {
-    console.error(`[AuthService] Error en solicitarRecuperacionPassword (${url}):`, error.message || error);
-    throw new Error(error.message || 'Error al solicitar la recuperación de contraseña.');
+    console.error(`[AuthService] Error en solicitarRecuperacionPassword:`, error.message || error);
+    throw new Error(error.response?.data?.detail || 'Error al solicitar recuperación');
   }
 };
 
@@ -145,12 +141,12 @@ export const restablecerPassword = async (
   token: string,
   nuevaPassword: string
 ): Promise<{ msg: string }> => {
-  const url = ApiConstants.AUTH_RESET_PASSWORD; // Ruta relativa
-  console.log(`[AuthService] Restableciendo contraseña en ${ApiConstants.BASE_URL}/${url}`);
+  const url = ApiConstants.AUTH_RESET_PASSWORD;
+  console.log(`[AuthService] Restableciendo contraseña en ${ApiConstants.BASE_URL}${url}`);
   try {
     const { data } = await post<{ msg: string }>(
       url,
-      { token: token, new_password: nuevaPassword }, // Envía JSON
+      { token: token, new_password: nuevaPassword },
       {
         headers: new AxiosHeaders({ 'Content-Type': 'application/json' })
       }
@@ -158,7 +154,7 @@ export const restablecerPassword = async (
     console.log('[AuthService] Contraseña restablecida con éxito.');
     return data;
   } catch (error: any) {
-    console.error(`[AuthService] Error en restablecerPassword (${url}):`, error.message || error);
-    throw new Error(error.message || 'Error al restablecer la contraseña.');
+    console.error(`[AuthService] Error en restablecerPassword:`, error.message || error);
+    throw new Error(error.response?.data?.detail || 'Error al restablecer contraseña');
   }
 };

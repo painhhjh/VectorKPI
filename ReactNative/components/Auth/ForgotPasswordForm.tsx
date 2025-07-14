@@ -1,7 +1,6 @@
 // ReactNative/components/Auth/ForgotPasswordForm.tsx
 // Componente de formulario para solicitar la recuperación de contraseña.
 
-
 import React, { useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import CampoEntrada from '../Common/InputField';
@@ -53,7 +52,7 @@ const FormularioRecuperarPassword: React.FC = () => {
     } catch (error: any) {
       console.error('[ForgotPasswordForm] Error atrapado desde el servicio:', error);
       // Muestra el error devuelto por el servicio (que ya debería estar formateado, incluyendo el 404)
-      setErrorLocal(error.message || 'Ocurrió un error al procesar tu solicitud.');
+      setErrorLocal(error.response?.data?.detail || 'Ocurrió un error al procesar tu solicitud.');
     } finally {
       setCargando(false);
     }

@@ -1,13 +1,13 @@
-# app/security/core.py
+# backend/app/security/core.py
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Union, Optional # Añadido Optional
+from typing import Any, Union, Optional
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import ValidationError, EmailStr # Añadido EmailStr
+from pydantic import ValidationError, EmailStr
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-# Si planeas enviar emails, necesitarás importar FastMail y sus componentes:
+from fastapi import HTTPException # Importar HTTPException para errores de API
 
 from app.core.config import settings
 from app.schemas.token import TokenData
@@ -18,26 +18,31 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = settings.ALGORITHM
 SECRET_KEY = settings.SECRET_KEY
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-# Añade la expiración para el token de reseteo (ej. 1 hora)
 PASSWORD_RESET_TOKEN_EXPIRE_HOURS = 1
 
-# --- Configuración de Email (Ejemplo - AJUSTAR SEGÚN TU PROVEEDOR) ---
-# Esto debería ir idealmente en config.py o ser cargado desde .env
-# Asegúrate de tener variables de entorno como MAIL_USERNAME, MAIL_PASSWORD, etc.
-# if settings.EMAILS_ENABLED: # Considera usar una bandera en settings
-#     email_conf = ConnectionConfig(
-#           MAIL_USERNAME = settings.MAIL_USERNAME, # Usar settings
-#           MAIL_PASSWORD = settings.MAIL_PASSWORD, # Usar settings
-#           MAIL_FROM = EmailStr(settings.MAIL_FROM), # Usar settings y validar
-#           MAIL_PORT = settings.MAIL_PORT, # Usar settings
-#           MAIL_SERVER = settings.MAIL_SERVER, # Usar settings
-#           MAIL_STARTTLS = settings.MAIL_STARTTLS, # Usar settings
-#           MAIL_SSL_TLS = settings.MAIL_SSL_TLS, # Usar settings
-#           USE_CREDENTIALS = settings.USE_CREDENTIALS, # Usar settings
-#           VALIDATE_CERTS = settings.VALIDATE_CERTS # Usar settings
-#     )
-#     fm = FastMail(email_conf)
-# --------------------------------------------------------------------
+# --- Configuración de Email para Brevo ---
+# Se inicializa fuera de una función para que sea accesible globalmente una vez
+fm: Optional[FastMail] = None
+
+# Solo inicializa FastMail si EMAILS_ENABLED es True
+if settings.EMAILS_ENABLED:
+    try:
+        email_conf = ConnectionConfig(
+            MAIL_USERNAME = settings.MAIL_USERNAME,
+            MAIL_PASSWORD = settings.MAIL_PASSWORD,
+            MAIL_FROM = settings.MAIL_FROM, # settings.MAIL_FROM ya es un EmailStr
+            MAIL_PORT = settings.MAIL_PORT,
+            MAIL_SERVER = settings.MAIL_SERVER,
+            MAIL_STARTTLS = settings.MAIL_STARTTLS,
+            MAIL_SSL_TLS = settings.MAIL_SSL_TLS,
+            USE_CREDENTIALS = settings.USE_CREDENTIALS,
+            VALIDATE_CERTS = settings.VALIDATE_CERTS
+        )
+        fm = FastMail(email_conf)
+        print("[Security Core] FastMail configurado exitosamente para Brevo.")
+    except Exception as e:
+        print(f"[Security Core] ERROR al configurar FastMail con Brevo: {e}. El envío de emails estará deshabilitado.")
+        fm = None # Asegúrate de que fm sea None si la configuración falla
 
 
 def create_access_token(
@@ -80,6 +85,7 @@ def verify_password_reset_token(token: str) -> Optional[str]:
             print("[Security Core] Token type is not 'reset'") # Log para depuración
             return None
         # Usamos model_validate para Pydantic V2
+        # Asumiendo que TokenData tiene un campo 'email'
         token_data = TokenData.model_validate({"email": payload.get("sub")})
         if token_data.email is None:
             print("[Security Core] Token subject (email) is missing") # Log para depuración
@@ -109,10 +115,11 @@ def decode_access_token(token: str) -> TokenData | None:
         # Verifica que el tipo sea 'access'. Si no tiene tipo, asumimos que es un token antiguo de acceso.
         token_type = payload.get("type")
         if token_type is not None and token_type != "access":
-             print(f"[Security Core] Token type is not 'access', found '{token_type}'") # Log para depuración
-             return None
+            print(f"[Security Core] Token type is not 'access', found '{token_type}'") # Log para depuración
+            return None
 
         # Usamos model_validate para Pydantic V2
+        # Asumiendo que TokenData tiene un campo 'email'
         token_data = TokenData.model_validate({"email": payload.get("sub")})
         if token_data.email is None:
             print("[Security Core] Access token subject (email) is missing") # Log para depuración
@@ -123,18 +130,16 @@ def decode_access_token(token: str) -> TokenData | None:
         print(f"[Security Core] Error decoding access token: {e}") # Log para depuración
         return None
 
-# --- Función para enviar email de reseteo ---
-# Esta función resuelve el AttributeError
 async def send_password_reset_email(email: str):
     """
     Genera un token de reseteo y envía un email al usuario.
-    (Implementación de ejemplo - REQUIERE CONFIGURACIÓN REAL DE EMAIL)
     """
     password_reset_token = create_password_reset_token(email)
-    # Construye la URL de reseteo que apuntará a tu frontend
-    # El frontend recibirá este token y llamará al endpoint /reset-password
-    # ¡¡¡AJUSTA ESTA URL A LA URL REAL DE TU FRONTEND!!!
-    reset_url = f"http://localhost:8081/reset-password?token={password_reset_token}"
+    # Construye la URL de reseteo que apuntará a tu frontend de React Native
+    # AJUSTA ESTA URL A LA URL REAL DE TU FRONTEND DE EXPO/REACT NATIVE
+    # Ejemplo para Expo Go: exp://TU_IP_LOCAL:PUERTO/--/resetPassword?token={password_reset_token}
+    # Puedes encontrar tu IP local y puerto al ejecutar 'npx expo start'
+    reset_url = f"exp://localhost:8081/--/resetPassword?token={password_reset_token}" # Ajusta 'localhost:8081' a tu IP y puerto de Expo Go
 
     subject = f"{settings.PROJECT_NAME} - Restablecimiento de Contraseña"
     body = f"""
@@ -148,31 +153,28 @@ async def send_password_reset_email(email: str):
     <p>El equipo de {settings.PROJECT_NAME}</p>
     """
 
-    # --- Lógica de Envío de Email (Ejemplo con fastapi-mail) ---
-    # Descomenta y configura esto cuando tengas el envío de emails listo.
-    # Asegúrate de que settings.EMAILS_ENABLED sea True y la configuración de email sea correcta.
-    # if settings.EMAILS_ENABLED:
-    #     message = MessageSchema(
-    #         subject=subject,
-    #         recipients=[email], # Lista de destinatarios
-    #         body=body,
-    #         subtype="html" # Envía como HTML
-    #     )
-    #     try:
-    #         await fm.send_message(message)
-    #         print(f"[Security Core] Email de reseteo enviado a {email}")
-    #     except Exception as e:
-    #         print(f"[Security Core] ERROR al enviar email de reseteo a {email}: {e}")
-    #         # Considera cómo manejar este error (loggear, reintentar, etc.)
-    #         # Podrías lanzar una excepción aquí para que el endpoint la capture
-    #         # from fastapi import HTTPException
-    #         # raise HTTPException(status_code=500, detail="Could not send reset email.")
-    # else:
-    # --- Placeholder si no tienes envío de email configurado ---
-    print("-" * 80)
-    print(f"[Security Core] SIMULANDO envío de email de reseteo a: {email}")
-    print(f"Asunto: {subject}")
-    print(f"URL de Reseteo (copiar y pegar en navegador): {reset_url}")
-    print(f"Token: {password_reset_token}")
-    print("-" * 80)
-    # ----------------------------------------------------------
+    # Lógica de Envío de Email con FastMail (Brevo)
+    if settings.EMAILS_ENABLED and fm: # Asegúrate de que fm se inicializó correctamente
+        message = MessageSchema(
+            subject=subject,
+            recipients=[email],
+            body=body,
+            subtype="html"
+        )
+        try:
+            await fm.send_message(message)
+            print(f"[Security Core] Email de reseteo enviado a {email} usando Brevo.")
+        except Exception as e:
+            print(f"[Security Core] ERROR al enviar email de reseteo a {email} con Brevo: {e}")
+            # Considera si quieres lanzar una excepción HTTP aquí o solo loggear el error
+            raise HTTPException(status_code=500, detail="No se pudo enviar el email de reseteo. Inténtalo de nuevo más tarde.")
+    else:
+        # Esto se ejecutará si EMAILS_ENABLED es False o si FastMail no se pudo inicializar
+        print("-" * 80)
+        print(f"[Security Core] SIMULANDO envío de email de reseteo a: {email}")
+        print(f"Asunto: {subject}")
+        print(f"URL de Reseteo (copiar y pegar en navegador): {reset_url}")
+        print(f"Token: {password_reset_token}")
+        print("NOTA: El envío de emails está deshabilitado o la configuración de FastMail falló.")
+        print("-" * 80)
+

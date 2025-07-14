@@ -1,3 +1,4 @@
+//ReactNative\app\(auth)\recuperarPassword.tsx
 //Pantalla para solicitar la recuperación de contraseña.
 
 import React from 'react';

@@ -1,5 +1,5 @@
 // ReactNative/constants/Api.ts
-const API_IP = '192.168.0.196'; // IP del backend
+const API_IP = '192.168.3.27'; // IP del backend
 const API_PORT = 8000; // Puerto donde corre FastAPI
 const API_VERSION = 'v1';
 

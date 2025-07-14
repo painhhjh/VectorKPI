@@ -1,4 +1,5 @@
-//Componente reutilizable de botón. Permite diferentes variantes (primario, secundario) y estado deshabilitado.
+//ReactNative\components\Common\Button.tsx
+// Componente reutilizable de botón. Permite diferentes variantes (primario, secundario) y estado deshabilitado.
 
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
