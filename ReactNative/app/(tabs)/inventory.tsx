@@ -300,7 +300,17 @@ export default function PantallaInventario() {
       />
       {error && productos.length > 0 && <MensajeError mensaje={error} />}
 
-            {/* Modal para seleccionar la categoría (separado para mejor UX) */}
+      
+
+      {/* Modal para crear un nuevo producto */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        
+      {/* Modal para seleccionar la categoría (separado para mejor UX) */}
       <Modal
         visible={showCategoryModal}
         animationType="slide"
@@ -346,13 +356,6 @@ export default function PantallaInventario() {
         </View>
       </Modal>
 
-      {/* Modal para crear un nuevo producto */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setModalVisible(false)}
-      >
         <View style={estilos.modalOverlay}>
           {/* Contenido del modal */}
           <View style={estilos.modalContenido}>
