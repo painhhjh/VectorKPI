@@ -3,7 +3,7 @@
 // No es necesario importar Constants de 'expo-constants' si solo usas process.env
 import Constants from 'expo-constants';
 
-const API_IP_LOCAL = '192.168.3.27'; // IP del backend para desarrollo local
+const API_IP_LOCAL = '192.168.3.231'; // IP del backend para desarrollo local
 const API_PORT_LOCAL = 8000; // Puerto donde corre FastAPI en desarrollo local
 const API_VERSION = 'v1';
 

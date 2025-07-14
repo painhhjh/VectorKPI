@@ -1,5 +1,5 @@
 # backend/app/api/v1/endpoints/auth.py
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Annotated, Any
@@ -11,6 +11,8 @@ from app.security import core as security_core
 from app.api.dependencies import ActiveUser, DbSession # Usamos los alias definidos
 from app.models.user import User # Necesario para el tipo de ActiveUser
 from app.schemas.user import UserRead, PasswordResetRequest, UserPasswordReset # Importa los nuevos esquemas
+from app.core.config import settings # Importar settings para acceder a FRONTEND_BASE_URL (si la defines)
+from datetime import timedelta # Necesario para la duración del token
 
 router = APIRouter()
 
@@ -55,14 +57,15 @@ def test_token(current_user: ActiveUser):
 
 @router.post("/forgot-password", response_model=dict[str, str]) # Define el tipo de respuesta
 async def forgot_password(
-    request: PasswordResetRequest, # Usa el esquema para el email
+    request: Request, # <-- Importante: Añadir Request para acceder a app.state.mail
+    email_in: PasswordResetRequest, # Usa el esquema para el email
     db: Annotated[Session, Depends(get_db)]
 ) -> Any:
     """
     Endpoint para solicitar recuperación de contraseña.
     Recibe el email del usuario y envía un email con instrucciones.
     """
-    user = crud_user.get_user_by_email(db, email=request.email)
+    user = crud_user.get_user_by_email(db, email=email_in.email) # Cambiado a email_in.email
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -71,8 +74,26 @@ async def forgot_password(
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
 
-    await security_core.send_password_reset_email(email=user.email)
-    return {"message": "Password reset email sent"} # Cambiado a 'message' para consistencia con frontend
+    # Generar un token de restablecimiento de contraseña
+    # Usar una duración corta, por ejemplo, 15 minutos
+    password_reset_token = security_core.create_access_token(
+        data={"sub": user.email, "type": "password_reset"},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES) # Reutiliza el tiempo de expiración del token de acceso
+    )
+
+    # Construir el enlace de restablecimiento (usando la URL del frontend hosteado)
+    # Asegúrate de que settings.FRONTEND_BASE_URL esté definido en tu config.py y .env
+    frontend_reset_url = f"{settings.FRONTEND_BASE_URL}/auth/reset-password?token={password_reset_token}"
+
+    # Llamar a la función de envío de correo en security_core.py
+    # Pasamos la instancia de FastMail y la URL del frontend
+    await security_core.send_password_reset_email(
+        mail_instance=request.app.state.mail, # Pasamos la instancia de FastMail
+        email=user.email,
+        reset_link=frontend_reset_url,
+        user_name=user.full_name or user.email # Pasa el nombre del usuario si está disponible
+    )
+    return {"message": "Password reset email sent"}
 
 
 @router.post("/reset-password", response_model=dict[str, str]) # Define el tipo de respuesta
@@ -111,4 +132,4 @@ async def reset_password(
     db.commit()
     db.refresh(user) # Refresca el objeto usuario para asegurar que los cambios se reflejen
 
-    return {"message": "Password updated successfully"} # Cambiado a 'message'
+    return {"message": "Password updated successfully"}

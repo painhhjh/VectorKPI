@@ -30,7 +30,7 @@ allowed_origins = [
     "http://localhost:5432",        # Puerto para PostgreSqL
     "http://192.168.0.193",          # Loopback de localhost en red local
     "http://192.168.0.193:8000",     # Backend FastAPI en la IP local
-    "https://tu-dominio-frontend.com", # URL de producción del frontend (modificar según despliegue)
+    "https://vector-kpi.onrender.com", # URL de producción del frontend (modificar según despliegue)
     "http://127.0.0.1:8000",
     "http://127.0.0.1:8081", # localhost simple
     "http://127.0.0.1:5432"
