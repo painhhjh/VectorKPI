@@ -22,7 +22,7 @@
     "axios": "^1.8.4",
     "d3-scale": "^4.0.2",
     "d3-shape": "^3.2.0",
-    "expo": "53.0.17",
+    "expo": "53.0.19",
     "expo-blur": "~14.1.5",
     "expo-constants": "17.1.7",
     "expo-font": "~13.3.2",
